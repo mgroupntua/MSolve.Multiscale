@@ -1,6 +1,6 @@
-﻿using MGroup.LinearAlgebra.Vectors;
-using MGroup.Materials;
-using MGroup.Materials.Interfaces;
+using MGroup.Constitutive.Structural.ContinuumElements;
+using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.Constitutive;
 using MGroup.Multiscale.Interfaces;
 using MGroup.Multiscale.RveTemplates;
 using MGroup.Solvers.Direct;
@@ -59,7 +59,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 			return (stressesCheck3, stressesCheck4, consCheck1, uInitialFreeDOFs_state1, uInitialFreeDOFs_state2);
 		}
 
-		public static (int[], int[], int[]) Check_Graphene_rve_parallel() //palio "Check_Graphene_rve_Obje_Integration()"
+		/*public static (int[], int[], int[]) Check_Graphene_rve_parallel() //palio "Check_Graphene_rve_Obje_Integration()"
 		{
 			//Origin h methodos Check_Graphene_rve_serial() tou parontos
 			//Origin: SeparateCodeCheckingClass4.Check_Graphene_rve_Obje_Integration apo to branch: example/ms_development_nl_elements_merge
@@ -68,7 +68,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 			//PROSOXH gia na elegxei kai h defterh iteration u_sunol_micro_2 prepei na valoume ston graphenebuilder Addgraphenesheet xwris to bondslip.
 
 			//mporoun na ginoun delete:
-			double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
+			double E_disp = 3.5; //Gpa double ni_disp = 0.4; // stather Poisson
 			ElasticMaterial3D material1 = new ElasticMaterial3D()
 			{ YoungModulus = E_disp, PoissonRatio = ni_disp, };
 			double[,] DGtr = new double[3, 3] { { 1.10, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
@@ -108,7 +108,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 
 
 		}
-
+		*/
 		#region transformation methods
 		public static double[] Transform_DGtr_to_GLvec(double[,] DGtr)
 		{

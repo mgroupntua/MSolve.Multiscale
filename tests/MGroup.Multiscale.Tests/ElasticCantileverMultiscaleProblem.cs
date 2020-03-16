@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.MSolve.Logging;
 using MGroup.Multiscale.Tests.SeparationBenchmarks1;
+using MGroup.NumericalAnalyzers.Logging;
 using Xunit;
 
 namespace MGroup.Multiscale.Tests

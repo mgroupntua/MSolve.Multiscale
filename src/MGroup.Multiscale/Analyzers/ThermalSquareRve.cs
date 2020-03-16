@@ -1,12 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using MGroup.Analyzers.Interfaces;
+using MGroup.Constitutive.Thermal;
+//using MGroup.Analyzers.Interfaces;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Reduction;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Interfaces;
+using MGroup.MSolve.Discretization.DofOrdering;
+using MGroup.Multiscale.InterfacesThermal;
+//using MGroup.MSolve.Discretization.FreedomDegrees;
+//using MGroup.MSolve.Discretization.Interfaces;
 
 //TODO: How can we ensure that the model has the correct shape and discretization?
 namespace MGroup.Multiscale.Analyzers

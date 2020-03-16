@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MGroup.FEM.Entities;
 using MGroup.FEM.Interfaces;
 using MGroup.LinearAlgebra.Output;
-using MGroup.MSolve.Discretization.FreedomDegrees;
+using MGroup.MSolve.Discretization;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {

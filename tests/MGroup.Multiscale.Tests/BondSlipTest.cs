@@ -1,7 +1,7 @@
-﻿using System;
+using System;
+using MGroup.Constitutive.Structural;
 using MGroup.LinearAlgebra.Commons;
-using MGroup.Materials;
-using MGroup.Materials.Interfaces;
+using MGroup.MSolve.Constitutive;
 using Xunit;
 
 namespace MGroup.Multiscale.Tests

@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using MGroup.Constitutive.Structural;
+using MGroup.Constitutive.Structural.ContinuumElements;
+using MGroup.Constitutive.Structural.ShellElements;
 using MGroup.FEM.Elements;
 using MGroup.FEM.Entities;
-using MGroup.Materials;
-using MGroup.Materials.ShellMaterials;
-using MGroup.MSolve.Discretization.FreedomDegrees;
+using MGroup.FEM.Structural.Elements;
+using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Integration.Quadratures;
-using MGroup.MSolve.Discretization.Interfaces;
+
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
@@ -475,7 +477,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//
 
 			//orismos elements katw strwshs
-			BenzeggaghKenaneCohesiveMaterial material3 = new Materials.BenzeggaghKenaneCohesiveMaterial()
+			BenzeggaghKenaneCohesiveMaterial material3 = new BenzeggaghKenaneCohesiveMaterial()
 			{
 				T_o_3 = T_o_3,
 				D_o_3 = D_o_3,
@@ -770,7 +772,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//
 
 			//orismos elements katw strwshs
-			BondSlipCohMat material3 = new Materials.BondSlipCohMat(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
+			BondSlipCohMat material3 = new BondSlipCohMat(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
 
 			int[] midsurfaceNodeIDforlocalCohesiveNode_i = new int[8];
 			for (int nElement = 0; nElement < elements; nElement++)

@@ -1,11 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using MGroup.Analyzers.Interfaces;
+//using MGroup.Analyzers.Interfaces;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization.Interfaces;
-using MGroup.MSolve.Logging.Interfaces;
-using MGroup.Solvers;
-using MGroup.Solvers.LinearSystems;
+//using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.LinearSystems;
+//using MGroup.Analyzers.Interfaces;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.AnalysisWorkflow;
+using MGroup.MSolve.AnalysisWorkflow.Providers;
+using MGroup.MSolve.Logging;
+//using MGroup.MSolve.Discretization.Interfaces;
+//using MGroup.MSolve.Logging.Interfaces;
+//using MGroup.Solvers;
+//using MGroup.Solvers.LinearSystems;
 
 namespace MGroup.Multiscale.Analyzers
 {

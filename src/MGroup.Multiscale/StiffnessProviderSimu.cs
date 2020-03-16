@@ -1,5 +1,6 @@
-﻿using MGroup.LinearAlgebra.Matrices;
-using MGroup.MSolve.Discretization.Interfaces;
+using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.Discretization;
+//using MGroup.MSolve.Discretization.Interfaces;
 using MGroup.Multiscale.IntegrationClasses;
 
 namespace MGroup.Multiscale

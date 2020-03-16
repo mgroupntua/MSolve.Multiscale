@@ -1,19 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using MGroup.Analyzers.NonLinear;
+using MGroup.Constitutive.Structural;
 using MGroup.FEM.Entities;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.Materials.Interfaces;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Interfaces;
-using MGroup.MSolve.Discretization.Providers;
+using MGroup.MSolve.Constitutive;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.LinearSystems;
 using MGroup.Multiscale.Analyzers;
 using MGroup.Multiscale.IntegrationClasses;
 using MGroup.Multiscale.Interfaces;
 using MGroup.Multiscale.ScaleTransitions;
-using MGroup.Problems;
+using MGroup.NumericalAnalyzers.NonLinear;
 using MGroup.Solvers;
 using MGroup.Solvers.LinearSystems;
 

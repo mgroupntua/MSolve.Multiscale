@@ -1,16 +1,18 @@
-﻿using System.Collections.Generic;
-using MGroup.Analyzers;
-using MGroup.Analyzers.NonLinear;
+using System.Collections.Generic;
+using MGroup.Constitutive.Structural;
 using MGroup.FEM.Elements;
 using MGroup.FEM.Entities;
-using MGroup.Materials.Interfaces;
+using MGroup.FEM.Structural.Elements;
+using MGroup.MSolve.Constitutive;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.FreedomDegrees;
 using MGroup.MSolve.Discretization.Integration.Quadratures;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Logging;
+using MGroup.MSolve.Solution;
 using MGroup.Multiscale.Interfaces;
-using MGroup.Problems;
+using MGroup.NumericalAnalyzers;
+using MGroup.NumericalAnalyzers.Logging;
+using MGroup.NumericalAnalyzers.NonLinear;
 using MGroup.Solvers;
 using MGroup.Solvers.Direct;
 
