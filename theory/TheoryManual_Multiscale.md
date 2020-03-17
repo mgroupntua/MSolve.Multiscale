@@ -18,16 +18,22 @@ The macroscopic material points are connected to the models of the microstructur
 
 The first one is imposed as a constraint for the bvp of the microstructure:
 
-$ \bar{F}_{M}:=\frac{1}{V_{0}}\int_{y\in  V_{0}}^{ }F_mdV_{0}
+<!---$ \bar{F}_{M}:=\frac{1}{V_{0}}\int_{y\in  V_{0}}^{ }F_mdV_{0} --->
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\bar{F}_{M}:=\frac{1}{V_{0}}\int_{y\in&space;V_{0}}^{&space;}F_mdV_{0}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\bar{F}_{M}:=\frac{1}{V_{0}}\int_{y\in&space;V_{0}}^{&space;}F_mdV_{0}" title="\bar{F}_{M}:=\frac{1}{V_{0}}\int_{y\in V_{0}}^{ }F_mdV_{0}" /></a>
 
 and the other one is exploited for the calculation of the macroscopic stress tensor:
 
-$ \bar{P}_{M}:=\frac{1}{V_{0}}\int_{y\in  V_{0}}^{ }P_mdV_{0}
+<!--- $ \bar{P}_{M}:=\frac{1}{V_{0}}\int_{y\in  V_{0}}^{ }P_mdV_{0}--->
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\bar{P}_{M}:=\frac{1}{V_{0}}\int_{y\in&space;V_{0}}^{&space;}P_mdV_{0}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\bar{P}_{M}:=\frac{1}{V_{0}}\int_{y\in&space;V_{0}}^{&space;}P_mdV_{0}" title="\bar{P}_{M}:=\frac{1}{V_{0}}\int_{y\in V_{0}}^{ }P_mdV_{0}" /></a>
 
 In view of these relations then, the hill mandel macrohomogeneity condition is indeed satisfied and the local variation of work in 
 the macroscale equals the volume average of variation of work performed on the RVE:
 
-$ \bar{P}_{M}:\delta F_{M}=\frac{1}{V_{0}}\int_{V_{0}}^{ }P_m :  \delta F_{m}dV_{0}
+<!--- $ \bar{P}_{M}:\delta F_{M}=\frac{1}{V_{0}}\int_{V_{0}}^{ }P_m :  \delta F_{m}dV_{0}--->
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\bar{P}_{M}:\delta&space;F_{M}=\frac{1}{V_{0}}\int_{V_{0}}^{&space;}P_m&space;:&space;\delta&space;F_{m}dV_{0}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\bar{P}_{M}:\delta&space;F_{M}=\frac{1}{V_{0}}\int_{V_{0}}^{&space;}P_m&space;:&space;\delta&space;F_{m}dV_{0}" title="\bar{P}_{M}:\delta F_{M}=\frac{1}{V_{0}}\int_{V_{0}}^{ }P_m : \delta F_{m}dV_{0}" /></a>
 
 In a nested solution scheme, calculation of stresses and the constitutive matrix of each macroscopi integration point for an iterative update
 of the macroscopic deformation state requires first he solution of non linear in general boundary value problem in each rve. The iterative solution
