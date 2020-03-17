@@ -1,5 +1,5 @@
-﻿using MGroup.LinearAlgebra.Vectors;
-using MGroup.Materials;
+using MGroup.Constitutive.Structural.ContinuumElements;
+using MGroup.LinearAlgebra.Vectors;
 using MGroup.Multiscale.Interfaces;
 using MGroup.Multiscale.RveTemplates;
 using MGroup.Solvers.Direct;

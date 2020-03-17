@@ -1,15 +1,20 @@
-﻿using System.Collections.Generic;
-using MGroup.Analyzers.NonLinear;
+using System.Collections.Generic;
+//using MGroup.Analyzers.NonLinear;
+using MGroup.Constitutive.Structural;
 using MGroup.FEM;
 using MGroup.FEM.Entities;
+//using MGroup.FEM;
+//using MGroup.FEM.Entities;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Interfaces;
-using MGroup.MSolve.Discretization.Providers;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.LinearSystems;
+//using MGroup.MSolve.Discretization.FreedomDegrees;
+//using MGroup.MSolve.Discretization.Interfaces;
+//using MGroup.MSolve.Discretization.Providers;
 using MGroup.Multiscale.Analyzers;
-using MGroup.Problems;
-using MGroup.Solvers;
-using MGroup.Solvers.LinearSystems;
+using MGroup.NumericalAnalyzers.NonLinear;
+//using MGroup.Problems;
 
 namespace MGroup.Multiscale
 {
@@ -118,11 +123,11 @@ namespace MGroup.Multiscale
 			ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
 
 			//v2.4
-			Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssebler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
+			Dictionary<int, EquivalentContributionsAssembler> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssembler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
 			//equivalentContributionsAssemblers.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler(model.SubdomainsDictionary[1], elementProvider));
 			foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
 			{
-				equivalentContributionsAssemblers.Add(subdomain.ID, new EquivalentContributionsAssebler(subdomain, elementProvider)); //v2.5
+				equivalentContributionsAssemblers.Add(subdomain.ID, new EquivalentContributionsAssembler(subdomain, elementProvider)); //v2.5
 			}
 			#endregion
 

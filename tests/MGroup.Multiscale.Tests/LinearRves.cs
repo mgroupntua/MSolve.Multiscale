@@ -1,9 +1,10 @@
+using MGroup.Constitutive.Structural.ContinuumElements;
+using MGroup.Constitutive.Structural.PlanarElements;
+using MGroup.Constitutive.Structural.ShellElements;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.Materials;
-using MGroup.Materials.Interfaces;
-using MGroup.Materials.ShellMaterials;
+using MGroup.MSolve.Constitutive;
 using MGroup.Multiscale.Interfaces;
 using MGroup.Solvers.Direct;
 using Xunit;

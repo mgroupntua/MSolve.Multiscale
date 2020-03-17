@@ -1,15 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using MGroup.Analyzers.Interfaces;
-using MGroup.Analyzers.NonLinear;
+//using MGroup.Analyzers.Interfaces;
+//using MGroup.Analyzers.NonLinear;
 using MGroup.FEM;
 using MGroup.FEM.Entities;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Interfaces;
+using MGroup.MSolve.AnalysisWorkflow;
+using MGroup.MSolve.AnalysisWorkflow.Providers;
+using MGroup.MSolve.Discretization;
+//using MGroup.MSolve.Discretization.FreedomDegrees;
+//using MGroup.MSolve.Discretization.Interfaces;
 using MGroup.MSolve.Logging;
-using MGroup.MSolve.Logging.Interfaces;
+using MGroup.MSolve.Solution;
+//using MGroup.MSolve.Logging.Interfaces;
+using MGroup.MSolve.Solution.LinearSystems;
+using MGroup.NumericalAnalyzers.Logging;
+using MGroup.NumericalAnalyzers.NonLinear;
 using MGroup.Solvers;
 using MGroup.Solvers.LinearSystems;
 
@@ -42,7 +49,7 @@ namespace MGroup.Multiscale.Analyzers
 		Dictionary<int, INode> boundaryNodes;
 		Dictionary<int, Dictionary<IDofType, double>> initialConvergedBoundaryDisplacements;
 		Dictionary<int, Dictionary<IDofType, double>> totalBoundaryDisplacements;
-		private readonly Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers;
+		private readonly Dictionary<int, EquivalentContributionsAssembler> equivalentContributionsAssemblers;
 		private Vector globalRhs;
 		private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
 		private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
@@ -50,7 +57,7 @@ namespace MGroup.Multiscale.Analyzers
 		public MicrostructureBvpNRNLAnalyzer(IModel model, ISolver solver, Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions> subdomainUpdaters,
 			INonLinearProvider provider, int increments, Dictionary<int, IVector> uInitialFreeDOFDisplacementsPerSubdomain,
 			Dictionary<int, INode> boundaryNodes, Dictionary<int, Dictionary<IDofType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<IDofType, double>> totalBoundaryDisplacements,
-			Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers)//, ISubdomainGlobalMapping[] mappings)
+			Dictionary<int, EquivalentContributionsAssembler> equivalentContributionsAssemblers)//, ISubdomainGlobalMapping[] mappings)
 		{
 			this.model = model;
 			this.solver = solver;

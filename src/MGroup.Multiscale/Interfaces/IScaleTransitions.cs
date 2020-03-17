@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using MGroup.FEM.Entities;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Interfaces;
+using MGroup.MSolve.Discretization;
+//using MGroup.MSolve.Discretization.FreedomDegrees;
+//using MGroup.MSolve.Discretization.Interfaces;
 
 namespace MGroup.Multiscale.Interfaces
 {

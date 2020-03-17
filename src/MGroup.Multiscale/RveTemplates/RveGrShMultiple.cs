@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using MGroup.FEM.Embedding;
 using MGroup.FEM.Entities;
-using MGroup.MSolve.Discretization.Interfaces;
+using MGroup.FEM.Structural.Embedding;
+using MGroup.MSolve.Discretization;
 using MGroup.Multiscale.Interfaces;
 using MGroup.Multiscale.SupportiveClasses;
 

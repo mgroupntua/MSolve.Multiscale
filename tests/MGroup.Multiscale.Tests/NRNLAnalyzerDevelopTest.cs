@@ -1,23 +1,23 @@
-﻿using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization;
 using System.Collections.Generic;
-using MGroup.Analyzers.NonLinear;
 using MGroup.FEM;
 using MGroup.FEM.Elements;
 using MGroup.FEM.Entities;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.Materials;
-using MGroup.MSolve.Discretization.FreedomDegrees;
 using MGroup.MSolve.Discretization.Integration.Quadratures;
-using MGroup.MSolve.Discretization.Interfaces;
-using MGroup.MSolve.Discretization.Providers;
 using MGroup.Multiscale.Analyzers;
-using MGroup.Problems;
 using MGroup.Solvers;
 using MGroup.Solvers.Direct;
 using MGroup.Solvers.LinearSystems;
-using MGroup.Solvers.Ordering;
-using MGroup.Solvers.Ordering.Reordering;
+using MGroup.FEM.Structural.Elements;
+using MGroup.Constitutive.Structural;
+using MGroup.Solvers.DofOrdering;
+using MGroup.Solvers.DofOrdering.Reordering;
+using MGroup.MSolve.Solution.LinearSystems;
+using MGroup.NumericalAnalyzers.NonLinear;
+using MGroup.MSolve.Solution;
+using MGroup.Constitutive.Structural.ContinuumElements;
 
 namespace MGroup.Multiscale.Tests
 {
@@ -38,8 +38,8 @@ namespace MGroup.Multiscale.Tests
 			#endregion
 
 			ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
-			Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssebler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
-			equivalentContributionsAssemblers.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler(model.SubdomainsDictionary[1], elementProvider));
+			Dictionary<int, EquivalentContributionsAssembler> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssembler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
+			equivalentContributionsAssemblers.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssembler(model.SubdomainsDictionary[1], elementProvider));
 			var solverBuilder = new SkylineSolver.Builder();
 			solverBuilder.DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 			var solver = solverBuilder.BuildSolver(model);
@@ -124,8 +124,8 @@ namespace MGroup.Multiscale.Tests
 
 			#region Creation of nessesary analyzers and solution 
 			ElementStructuralStiffnessProvider elementProvider2 = new ElementStructuralStiffnessProvider();
-			Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers2 = new Dictionary<int, EquivalentContributionsAssebler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
-			equivalentContributionsAssemblers2.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler(model.SubdomainsDictionary[1], elementProvider2));
+			Dictionary<int, EquivalentContributionsAssembler> equivalentContributionsAssemblers2 = new Dictionary<int, EquivalentContributionsAssembler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
+			equivalentContributionsAssemblers2.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssembler(model.SubdomainsDictionary[1], elementProvider2));
 			var solverBuilder2 = new SkylineSolver.Builder();
 			solverBuilder2.DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 			ISolver solver2 = solverBuilder2.BuildSolver(model);

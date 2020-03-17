@@ -39,6 +39,7 @@ namespace MGroup.Multiscale.Tests
 			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(stressesCheck4, stressesCheck4Expected));
 		}
 
+		/*
 		[Fact]
 		public static void CheckOneRveParallel()
 		{
@@ -58,6 +59,7 @@ namespace MGroup.Multiscale.Tests
 			Assert.True(AreDisplacementsSame(cohePrint, cohePrintExpected));
 			Assert.True(AreDisplacementsSame(shellPrint, shellPrintExpected));
 		}
+		*/
 
 		public static bool AreDisplacementsSame(int[] expectedValues,
 			int[] computedValues)
