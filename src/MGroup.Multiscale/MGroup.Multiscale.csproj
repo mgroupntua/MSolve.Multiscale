@@ -1,14 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MGroup.Analyzers" Version="1.0.115" />
-    <PackageReference Include="MGroup.FEM" Version="1.0.116" />
-    <PackageReference Include="MGroup.MSolve.Logging" Version="1.0.114" />
-    <PackageReference Include="MGroup.Problems" Version="1.0.119" />
+    <PackageReference Include="MGroup.Constitutive.Structural" Version="0.2.0-unstable.13" />
+    <PackageReference Include="MGroup.NumericalAnalyzers" Version="0.2.0-unstable.8" />
+    <PackageReference Include="MGroup.NumericalAnalyzers.Discretization" Version="0.2.0-unstable.8" />
   </ItemGroup>
 
 </Project>
