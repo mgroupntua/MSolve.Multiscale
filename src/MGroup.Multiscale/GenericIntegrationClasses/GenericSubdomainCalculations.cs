@@ -19,14 +19,14 @@ namespace MGroup.MSolve.MultiscaleAnalysis
     /// Supportive class  that implements nesessary integration methods associated with FE2 multiscale analysis 
     /// Authors: Gerasimos Sotiropoulos
     /// </summary>
-    public static class SubdomainCalculations
+    public static class GenericSubdomainCalculations<TMatrix> where TMatrix : class, IMatrix
     {
         
         public static Dictionary<int,int> GetNodesOrderInDictionary(Dictionary<int, INode> boundaryNodes)
         {
             Dictionary<int, int> boundaryNodesOrder = new Dictionary<int, int>();
             int order = 1;
-            foreach (Node boundaryNode in boundaryNodes.Values)
+            foreach (INode boundaryNode in boundaryNodes.Values)
             {
                 boundaryNodesOrder.Add(boundaryNode.ID, order);
                 order += 1;
@@ -194,8 +194,8 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         }
 
-        public static double[][] CalculateKpfKffinverseKfpDq(IGlobalVector[] f2_vectors, Subdomain subdomain, IElementMatrixProvider elementProvider,
-            IScaleTransitions scaleTransitions, Dictionary<int, INode> boundaryNodes, GlobalAlgebraicModel<Matrix> globalAlgebraicModel)
+        public static double[][] CalculateKpfKffinverseKfpDq(IGlobalVector[] f2_vectors, ISubdomain subdomain, IElementMatrixProvider elementProvider,
+            IScaleTransitions scaleTransitions, Dictionary<int, INode> boundaryNodes, GlobalAlgebraicModel<TMatrix> globalAlgebraicModel)
         {
             var ActiveDofs = new ActiveDofs();
             ActiveDofs.AddDof(StructuralDof.TranslationX);
@@ -227,7 +227,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             for (int j1 = 0; j1 < f2_vectors.Length; j1++) { f2NodalResults[j1]= globalAlgebraicModel.ExtractAllResults(f2_vectors[j1]); }
             
 
-            foreach (IElementType element in subdomain.Elements)
+            foreach (IElementType element in subdomain.EnumerateElements())
             {
                 var isEmbeddedElement = element is Discretization.Embedding.IEmbeddedElement;
                 var elStart = DateTime.Now;

@@ -14,7 +14,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="SeparationBencmarks2\" />
+    <Folder Include="SepatationBenchmarks1\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\MGroup.Multiscale\MGroup.Multiscale.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="InputFiles\MSmicroBvpAnalyzerTest\U_sunol_micro_3.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="InputFiles\MSmicroBvpAnalyzerTest\U_sunol_micro_6.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="RveTemplates\Input\RveHomogeneous\REF_new_total_numbering27.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

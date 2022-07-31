@@ -17,7 +17,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
     /// Supportive class  that implements nesessary integration methods associated with FE2 multiscale analysis 
     /// Authors: Gerasimos Sotiropoulos
     /// </summary>
-    public static class SubdomainCalculationsMultiple
+    public static class GenericSubdomainCalculationsMultiple<TMatrix> where TMatrix : class, IMatrix
     {
         
         #region v2 methods
@@ -49,14 +49,14 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         }
 
         public static Dictionary<int, double[]> CalculateFppReactionsVectorSubdomains(Model model, IElementMatrixProvider elementProvider,
-            IScaleTransitions scaleTransitions, Dictionary<int, INode> boundaryNodes, List<int> boundaryNodesIds, IGlobalVector solution, /*Dictionary<int, IVector> dSolution,*/
+            IScaleTransitions scaleTransitions, Dictionary<int, INode> boundaryNodes, List<int> boundaryNodesIds, IGlobalVector solution,/* Dictionary<int, IVector> dSolution,*/
             Dictionary<int, Dictionary<IDofType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<IDofType, double>> totalBoundaryDisplacements,
-            int nIncrement, int totalIncrements, GlobalAlgebraicModel<Matrix> globalAlgebraicModel)
+            int nIncrement, int totalIncrements, GlobalAlgebraicModel<TMatrix> globalAlgebraicModel)
         {
             Dictionary<int, double[]> FppReactionVectorSubdomains = new Dictionary<int, double[]>();
 
             
-            FppReactionVectorSubdomains.Add(model.EnumerateSubdomains().First().ID, SubdomainCalculations.CalculateFppReactionsVector((Subdomain)model.EnumerateSubdomains().First(), elementProvider, scaleTransitions, boundaryNodes, 
+            FppReactionVectorSubdomains.Add(model.EnumerateSubdomains().First().ID, GenericSubdomainCalculations<TMatrix>.CalculateFppReactionsVector((Subdomain)model.EnumerateSubdomains().First(), elementProvider, scaleTransitions, boundaryNodes, 
                     boundaryNodesIds, solution, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, totalIncrements, globalAlgebraicModel));
             
 
@@ -92,13 +92,13 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         /// <param name="solver">
         /// <paramref name="solver"/>.<see cref="ISolver.Initialize"/> must already have been called. Also the linear system matrices must already have been set.
         /// </param>
-        public static IGlobalVector[] CalculateKffinverseKfpDqSubdomains(GlobalVector[] KfpDqVectors, Model model, IElementMatrixProvider elementProvider,
-            IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, ISolver solver)
+        public static IGlobalVector[] CalculateKffinverseKfpDqSubdomains(IGlobalVector[] KfpDqVectors, Model model, IElementMatrixProvider elementProvider,
+            IScaleTransitions scaleTransitions, Dictionary<int, INode> boundaryNodes, ISolver solver)
         {
             // IReadOnlyDictionary<int, ILinearSystem> linearSystems = solver.LinearSystems;
 
             #region Creation of solution vectors structure
-            IGlobalVector[] f2_vectorsSubdomains = new GlobalVector[KfpDqVectors.Length];
+            IGlobalVector[] f2_vectorsSubdomains = new IGlobalVector[KfpDqVectors.Length];
             //foreach (int subdomainID in KfpDqSubdomains.Keys)
             //{
             //    f2_vectorsSubdomains.Add(subdomainID, new double[KfpDqSubdomains[subdomainID].GetLength(0)][]);
@@ -158,7 +158,8 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             return f2_vectorsSubdomains;
         }
 
-        //public static Dictionary<int, double[][]> CalculateKpfKffinverseKfpDqSubdomains(Dictionary<int, double[][]> f2_vectorsSubdomains, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
+        // TODO GEr maintain te following lines for future multi subdomain implemntation
+         //public static Dictionary<int, double[][]> CalculateKpfKffinverseKfpDqSubdomains(Dictionary<int, double[][]> f2_vectorsSubdomains, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
         //{
         //    Dictionary<int, double[][]> f3_vectorsSubdomains = new Dictionary<int, double[][]>();
 
