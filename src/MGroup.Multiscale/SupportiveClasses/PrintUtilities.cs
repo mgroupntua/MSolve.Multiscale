@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+
 using MGroup.LinearAlgebra.Matrices;
 
 namespace MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses
@@ -141,8 +144,11 @@ namespace MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         public static double[] ReadVector(string path)
         {
-
-            var reader = new StreamReader(path);
+			string CultureName = Thread.CurrentThread.CurrentCulture.Name;
+			CultureInfo ci = new CultureInfo(CultureName);
+			ci.NumberFormat.NumberDecimalSeparator = ".";
+			Thread.CurrentThread.CurrentCulture = ci;
+			var reader = new StreamReader(path);
             var lines = File.ReadLines(path).Count();
             double[] data = new double[lines];
             for (int i = 0; i < lines; ++i)
@@ -157,8 +163,11 @@ namespace MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         public static int[] ReadIntVector(string path)
         {
-
-            var reader = new StreamReader(path);
+			string CultureName = Thread.CurrentThread.CurrentCulture.Name;
+			CultureInfo ci = new CultureInfo(CultureName);
+			ci.NumberFormat.NumberDecimalSeparator = ".";
+			Thread.CurrentThread.CurrentCulture = ci;
+			var reader = new StreamReader(path);
             var lines = File.ReadLines(path).Count();
             int[] data = new int[lines];
             for (int i = 0; i < lines; ++i)

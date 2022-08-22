@@ -1,6 +1,7 @@
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.MultiscaleAnalysis;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
 using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
@@ -77,60 +78,59 @@ namespace MGroup.Multiscale.Tests.FEMpartB
 
         }
 
-        //public static (double[], double[], double[,], IVector, IVector) Check_Graphene_rve_Obje_Integration()
-        //{
-        //    //Origin: SeparateCodeCheckingClass4.Check05bStressIntegrationObje_Integration parontos
-        //    //modifications: tha xrhsimopoithei o GrapheneBuilder...35...v2 gia epilush enos paradeigmatos GrapheneReinforcedRVEBuilderCHECK
-        //    //gia elegxo twn newn domwn
-        //    //PROSOXH gia na elegxei kai h defterh iteration u_sunol_micro_2 prepei na valoume ston graphenebuilder Addgraphenesheet xwris to bondslip.
+		//public static (double[], double[], double[,], IVector, IVector) Check_Graphene_rve_Obje_Integration()
+		//{
+		//	//Origin: SeparateCodeCheckingClass4.Check05bStressIntegrationObje_Integration parontos
+		//	//modifications: tha xrhsimopoithei o GrapheneBuilder...35...v2 gia epilush enos paradeigmatos GrapheneReinforcedRVEBuilderCHECK
+		//	//gia elegxo twn newn domwn
+		//	//PROSOXH gia na elegxei kai h defterh iteration u_sunol_micro_2 prepei na valoume ston graphenebuilder Addgraphenesheet xwris to bondslip.
 
-        //    double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
-        //    var material1 = new ElasticMaterial3D()
-        //    { YoungModulus = E_disp, PoissonRatio = ni_disp, };
-        //    double[,] DGtr = new double[3, 3] { { 1.10, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
-        //    double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
-        //    material1.UpdateMaterial(GLVec);
-        //    //double[] stressesCheck1 = material1.Stresses;
-        //    double[] stressesCheck1 = new double[6] {material1.Stresses[0], material1.Stresses[1], material1.Stresses[2],
-        //        material1.Stresses[3],material1.Stresses[4],material1.Stresses[5] };
-        //    DGtr = new double[3, 3] { { 1.20, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
-        //    GLVec = Transform_DGtr_to_GLvec(DGtr);
-        //    material1.UpdateMaterial(GLVec);
-        //    material1.SaveState();
-        //    double[] stressesCheck2 = material1.Stresses;
+		//	double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
+		//	var material1 = new ElasticMaterial3D(E_disp, ni_disp);
+		//	double[,] DGtr = new double[3, 3] { { 1.10, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+		//	double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
+		//	material1.UpdateMaterial(GLVec);
+		//	//double[] stressesCheck1 = material1.Stresses;
+		//	double[] stressesCheck1 = new double[6] {material1.Stresses[0], material1.Stresses[1], material1.Stresses[2],
+		//		material1.Stresses[3],material1.Stresses[4],material1.Stresses[5] };
+		//	DGtr = new double[3, 3] { { 1.20, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+		//	GLVec = Transform_DGtr_to_GLvec(DGtr);
+		//	material1.UpdateMaterial(GLVec);
+		//	material1.SaveState();
+		//	double[] stressesCheck2 = material1.Stresses;
 
-        //    //VectorExtensions.AssignTotalAffinityCount();
-        //    IRVEbuilder homogeneousRveBuilder1 = new RveGrShOne(1);
-        //    //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+		//	//VectorExtensions.AssignTotalAffinityCount();
+		//	IRVEbuilder homogeneousRveBuilder1 = new RveGrShOne(1);
+		//	//IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
 
-        //    //IContinuumMaterial3DDefGrad 
-        //    var microstructure3 = new MicrostructureDefGrad3D(homogeneousRveBuilder1,
-        //        model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1);
-        //    //IContinuumMaterial3DDefGrad microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
-        //    double[,] consCheck1 = new double[6, 6];
-        //    for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
+		//	//IContinuumMaterial3DDefGrad 
+		//	var microstructure3 = new MicrostructureDefGrad3D(homogeneousRveBuilder1,
+		//		model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1);
+		//	//IContinuumMaterial3DDefGrad microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
+		//	double[,] consCheck1 = new double[6, 6];
+		//	for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
 
-        //    microstructure3.UpdateMaterial(new double[9] { 1.05, 1, 1, 0, 0, 0, 0, 0, 0 });
-        //    double[] stressesCheck3 = microstructure3.Stresses;
-        //    microstructure3.SaveState();
-        //    IVector uInitialFreeDOFs_state1 = microstructure3.uInitialFreeDOFDisplacementsPerSubdomain[1].Copy();
+		//	microstructure3.UpdateMaterial(new double[9] { 1.05, 1, 1, 0, 0, 0, 0, 0, 0 });
+		//	double[] stressesCheck3 = microstructure3.Stresses;
+		//	microstructure3.SaveState();
+		//	IVector uInitialFreeDOFs_state1 = microstructure3.uInitialFreeDOFDisplacementsPerSubdomain[1].Copy();
 
-        //    microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
-        //    double[] stressesCheck4 = microstructure3.Stresses;
-        //    IVector uInitialFreeDOFs_state2 = microstructure3.uInitialFreeDOFDisplacementsPerSubdomain[1].Copy();
+		//	microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
+		//	double[] stressesCheck4 = microstructure3.Stresses;
+		//	IVector uInitialFreeDOFs_state2 = microstructure3.uInitialFreeDOFDisplacementsPerSubdomain[1].Copy();
 
-        //    //PrintUtilities.WriteToFileVector(stressesCheck3, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck3.txt");
-        //    //PrintUtilities.WriteToFileVector(stressesCheck4, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck4.txt");
-        //    //PrintUtilities.WriteToFile(consCheck1, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\consCheck1.txt");
-        //    //PrintUtilities.WriteToFileVector(uInitialFreeDOFs_state1.CopyToArray(), @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\uInitialFreeDOFs_state1.txt");
-        //    //PrintUtilities.WriteToFileVector(uInitialFreeDOFs_state2.CopyToArray(), @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\uInitialFreeDOFs_state2.txt");
+		//	//PrintUtilities.WriteToFileVector(stressesCheck3, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck3.txt");
+		//	//PrintUtilities.WriteToFileVector(stressesCheck4, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck4.txt");
+		//	//PrintUtilities.WriteToFile(consCheck1, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\consCheck1.txt");
+		//	//PrintUtilities.WriteToFileVector(uInitialFreeDOFs_state1.CopyToArray(), @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\uInitialFreeDOFs_state1.txt");
+		//	//PrintUtilities.WriteToFileVector(uInitialFreeDOFs_state2.CopyToArray(), @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\uInitialFreeDOFs_state2.txt");
 
 
-        //    return (stressesCheck3, stressesCheck4, consCheck1, uInitialFreeDOFs_state1, uInitialFreeDOFs_state2);
-        //}
+		//	return (stressesCheck3, stressesCheck4, consCheck1, uInitialFreeDOFs_state1, uInitialFreeDOFs_state2);
+		//}
 
-        #region transformation methods
-        public static double[] Transform_DGtr_to_GLvec(double[,] DGtr)
+		#region transformation methods
+		public static double[] Transform_DGtr_to_GLvec(double[,] DGtr)
         {
             double[,] GL = new double[3, 3];
 

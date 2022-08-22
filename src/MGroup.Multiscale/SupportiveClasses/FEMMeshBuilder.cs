@@ -301,12 +301,9 @@ namespace MGroup.Multiscale.SupportiveClasses
 						model.NodesDictionary[globalNodeIDforlocalNode_i[5]],
 						model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
 						model.NodesDictionary[globalNodeIDforlocalNode_i[7]]};
-						var e1 = new Hexa8NonLinear(elementNodes, material1, MSolve.Numerics.Integration.Quadratures.GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
+						var e1 = new Hexa8NonLinear(elementNodes, material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
 						e1.ID = ElementID;
-						/*{
-							ID = ElementID,
-							ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
-						};*/
+
 						model.ElementsDictionary.Add(e1.ID, e1);
 						model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 						elementCounter++;
@@ -462,7 +459,6 @@ namespace MGroup.Multiscale.SupportiveClasses
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },};
 				e2.tk = Tk_vec;
-				
 				
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
