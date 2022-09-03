@@ -30,7 +30,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 	/// Primary multiscale analysis class that connects all nesessary structures for a FE2 simulation (with an 3D to 2D degenerate Rve)
 	/// Authors: Gerasimos Sotiropoulos
 	/// </summary>
-	public class Microstructure2DplaneStress<TMatrix> : StructuralProblemsMicrostructureBase, IContinuumMaterial2D
+	public class MicrostructureShell2D<TMatrix> : StructuralProblemsMicrostructureBase, IContinuumMaterial2D
 		where TMatrix : class, IMatrix
     {
         private ProblemStructural provider;
@@ -83,7 +83,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         //Random properties 
         private int database_size;
 
-		public Microstructure2DplaneStress(IdegenerateRVEbuilder rveBuilder, /*Func<Model, ISolver> createSolver,*/ 
+		public MicrostructureShell2D(IdegenerateRVEbuilder rveBuilder, /*Func<Model, ISolver> createSolver,*/ 
             bool EstimateOnlyLinearResponse, int database_size, IAlgebraicStrategy<TMatrix> algebraicStrategy)
         {
             this.rveBuilder = rveBuilder;
@@ -140,7 +140,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         public object Clone()
         {
             int new_rve_id = rnd1.Next(1, database_size + 1);
-			return new Microstructure2DplaneStress<TMatrix>((IdegenerateRVEbuilder)rveBuilder.Clone(new_rve_id), EstimateOnlyLinearResponse, database_size, algebraicStrategy);
+			return new MicrostructureShell2D<TMatrix>((IdegenerateRVEbuilder)rveBuilder.Clone(new_rve_id), EstimateOnlyLinearResponse, database_size, algebraicStrategy);
         }
 
         public Dictionary<int, INode> BoundaryNodesDictionary
