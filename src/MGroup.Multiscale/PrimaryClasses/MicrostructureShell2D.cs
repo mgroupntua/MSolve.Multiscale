@@ -2,6 +2,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.Constitutive.Structural.Providers;
+using MGroup.Constitutive.Structural.Shells;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Constitutive;
@@ -30,10 +31,13 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 	/// Primary multiscale analysis class that connects all nesessary structures for a FE2 simulation (with an 3D to 2D degenerate Rve)
 	/// Authors: Gerasimos Sotiropoulos
 	/// </summary>
-	public class MicrostructureShell2D<TMatrix> : StructuralProblemsMicrostructureBase, IContinuumMaterial2D
+	public class MicrostructureShell2D<TMatrix> : StructuralProblemsMicrostructureBase, IShellMaterial //A.1
 		where TMatrix : class, IMatrix
     {
-        private ProblemStructural provider;
+		public double[] NormalVectorV3 { get; set; }
+		public double[] TangentVectorV1 { get; set; }
+		public double[] TangentVectorV2 { get; set; }
+		private ProblemStructural provider;
         private IAlgebraicStrategy<TMatrix> algebraicStrategy;
         public GlobalAlgebraicModel<TMatrix> globalAlgebraicModel { get; private set; }
         private ISolver solver;
@@ -47,14 +51,15 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         private double volume;
         public IGlobalVector uInitialFreeDOFDisplacementsPerSubdomain { get; private set; }
         Dictionary<int, Dictionary<IDofType, double>> initialConvergedBoundaryDisplacements;
-		private IScaleTransitions scaleTransitions = new SmallStrain3Dto2DplaneStressScaleTransition();
+		private IScaleTransitions scaleTransitions = new SmallStrain3Dto2DplaneStressScaleTransition(); //TODO: mporoume na to dinoume ston constructor
 		Random rnd1 = new Random();
         //private readonly Func<Model, ISolver> createSolver;
 
         // aparaithta gia to implementation tou IFiniteElementMaterial3D
         double[,] constitutiveMatrix;
-        private double[] trueStressVec = new double[6];
-        private bool modified; // opws sto MohrCoulomb gia to modified
+		private double[] trueStressVec; // Todo rename the stresses variable
+		Matrix transformationMatrix; // gia to shell
+		private bool modified; // opws sto MohrCoulomb gia to modified
 
         private double[,] Cijrs_prev;
         private bool matrices_not_initialized = true;
@@ -137,13 +142,16 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             }            
         }
 
-        public object Clone()
-        {
-            int new_rve_id = rnd1.Next(1, database_size + 1);
+		public IShellMaterial Clone()
+		{
+			Random rnd1 = new Random();
+			int new_rve_id = rnd1.Next(1, database_size + 1);
 			return new MicrostructureShell2D<TMatrix>((IdegenerateRVEbuilder)rveBuilder.Clone(new_rve_id), EstimateOnlyLinearResponse, database_size, algebraicStrategy);
-        }
+		}
 
-        public Dictionary<int, INode> BoundaryNodesDictionary
+		object ICloneable.Clone() => this.Clone();
+
+		public Dictionary<int, INode> BoundaryNodesDictionary
         {
             get { return boundaryNodes; }
         }
@@ -194,7 +202,11 @@ namespace MGroup.MSolve.MultiscaleAnalysis
                 //}
             }
 
-            for (int i1 = 0; i1 < 3; i1++)
+			double[] rveCoordinatesSmallStrainVec = TransformStrains(smallStrainVec);
+			smallStrainVec = rveCoordinatesSmallStrainVec;
+
+
+			for (int i1 = 0; i1 < 3; i1++)
             {
                 for (int j1 = 0; j1 < 3; j1++)
                 {Cijrs_prev[i1, j1] = constitutiveMatrix[i1, j1];}
@@ -272,21 +284,92 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
 			#region update of prescribed converged displacements vectors;
 			initialConvergedBoundaryDisplacements = totalPrescribedBoundaryDisplacements;
-            #endregion
+			#endregion
 
-            #region constitutive tensors transformation methods
-            
-            #endregion
+			#region constitutive tensors transformation methods
+			// transformation gia to shell 
+			(var transformedTrueStressVec, var transformedConstitutiveMat) = StressesAndConstitutiveMatrixTransformation(trueStressVec, constitutiveMat);
+			#endregion
 
-            constitutiveMatrix = constitutiveMat;
+			this.constitutiveMatrix = transformedConstitutiveMat;
+			trueStressVec = transformedTrueStressVec;
 
-            //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
-            this.modified = CheckIfConstitutiveMatrixChanged();
+			//PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
+			this.modified = CheckIfConstitutiveMatrixChanged();
 
             return trueStressVec;
-        }        
+        }
 
-        private bool CheckIfConstitutiveMatrixChanged()
+		private void CalculateTransformationMatrix(Vector surfaceBasisVector1, Vector surfaceBasisVector2)
+		{
+			var auxMatrix1 = Matrix.CreateZero(2, 2);  //auxMatrix: covariant metric coefficients gab
+			auxMatrix1[0, 0] = surfaceBasisVector1.DotProduct(surfaceBasisVector1);
+			auxMatrix1[0, 1] = surfaceBasisVector1.DotProduct(surfaceBasisVector2);
+			auxMatrix1[1, 0] = surfaceBasisVector2.DotProduct(surfaceBasisVector1);
+			auxMatrix1[1, 1] = surfaceBasisVector2.DotProduct(surfaceBasisVector2);
+			Matrix inverse = auxMatrix1.Invert(); //inverse: contravariant metric coefficients g_ab (ekthetis ta a,b)
+
+			//Contravariant base vectors
+			double[][] G_i = new double[2][];
+			for (int i1 = 0; i1 < 2; i1++)
+			{
+				G_i[i1] = new double[3];
+				for (int i2 = 0; i2 < 3; i2++)
+				{
+					G_i[i1][i2] = inverse[i1, 0] * surfaceBasisVector1[i2] + inverse[i1, 1] * surfaceBasisVector2[i2];
+				}
+			}
+
+			//Normalised covariant base vectors
+			double[][] Ei = new double[2][];// to trito den xreiazetai
+
+			Ei[0] = surfaceBasisVector1.CopyToArray();
+			double G1_norm = surfaceBasisVector1.Norm2();
+			for (int i1 = 0; i1 < 3; i1++) { Ei[0][i1] = Ei[0][i1] / G1_norm; }
+
+			double G2_dot_E1 = 0;
+			for (int i1 = 0; i1 < 3; i1++) { G2_dot_E1 += surfaceBasisVector2[i1] * Ei[0][i1]; }
+
+			double[] projection = new double[3];
+			for (int i1 = 0; i1 < 3; i1++) { projection[i1] = G2_dot_E1 * Ei[0][i1]; }
+
+			Ei[1] = new double[3];
+			for (int i1 = 0; i1 < 3; i1++) { Ei[1][i1] = surfaceBasisVector2[i1] - projection[i1]; }
+			double norm1 = (Vector.CreateFromArray(Ei[1])).Norm2();
+			for (int i1 = 0; i1 < 3; i1++) { Ei[1][i1] = Ei[1][i1] / norm1; }
+
+			double[,] EiDOTG_j = new double[2, 2];
+
+			for (int i1 = 0; i1 < 2; i1++)
+			{
+				for (int i2 = 0; i2 < 2; i2++)
+				{
+					EiDOTG_j[i1, i2] = Vector.CreateFromArray(Ei[i1]).DotProduct(Vector.CreateFromArray(G_i[i2]));
+				}
+			}
+
+			transformationMatrix = Matrix.CreateFromArray(new double[3, 3] { {EiDOTG_j[0,0]*EiDOTG_j[0,0],EiDOTG_j[0,1]*EiDOTG_j[0,1],EiDOTG_j[0,0]*EiDOTG_j[0,1]  },
+				 {EiDOTG_j[1,0]*EiDOTG_j[1,0],EiDOTG_j[1,1]*EiDOTG_j[1,1],EiDOTG_j[1,0]*EiDOTG_j[1,1]  },
+				{2*EiDOTG_j[1,0]*EiDOTG_j[0,0],2*EiDOTG_j[1,1]*EiDOTG_j[0,1],EiDOTG_j[1,0]*EiDOTG_j[0,1]+EiDOTG_j[1,1]*EiDOTG_j[0,0]   } });
+		}
+
+		private double[] TransformStrains(double[] smallStrainVec)
+		{
+			double[] rveCoordinatesSmallStrainVec = (transformationMatrix * (Vector.CreateFromArray(smallStrainVec))).CopyToArray();
+			return rveCoordinatesSmallStrainVec;
+		}
+
+
+		private (double[], double[,]) StressesAndConstitutiveMatrixTransformation(double[] trueStressVec, double[,] constitutiveMat)
+		{
+			var transformedTrueStressVec = (transformationMatrix.Transpose() * (Vector.CreateFromArray(trueStressVec))).CopyToArray();
+			// TODO: CHECK matrix for corrupted data after multiplication
+			var transformedConstitutiveMat = (transformationMatrix.Transpose() * (Matrix.CreateFromArray(constitutiveMat)) * transformationMatrix).CopyToArray2D();
+
+			return (transformedTrueStressVec, transformedConstitutiveMat);
+		}
+
+		private bool CheckIfConstitutiveMatrixChanged()
         {
             for (int i = 0; i < 3; i++)
                 for (int j = 0; j < 3; j++)
@@ -305,8 +388,8 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             get
             {
                 if (constitutiveMatrix == null) CalculateOriginalConstitutiveMatrixWithoutNLAnalysis(); // TODOGerasimos arxiko constitutive mporei na upologizetai pio efkola
-                return Matrix.CreateFromArray(constitutiveMatrix);
-            }
+                return Matrix.CreateFromArray(constitutiveMatrix); // TODO: apla kratame to constitutive matrix san array[,] (alla matrix mporei na xrhimopoithei gia tis peristrofes)
+			}
         }
 
         public double[] Stresses // opws xrhsimopoeitai sto mohrcoulomb kai hexa8
@@ -373,16 +456,16 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             {
                 this.InitializeMatrices();
                 this.InitializeData();
-                //TODO Ger: to pou vrisketai h dhmiourgia tou problem structural prin to orderdofs dld
-                //TODO Ger: The disposable solver sould be create here or in the else section
-                //solver = createSolver(model);
-                //solver.OrderDofs(false);
-                //foreach (ILinearSystem linearSystem in solver.LinearSystems.Values)
-                //{
-                //    linearSystem.Reset(); //TODO find out if new structures cause any problems
-                //    linearSystem.Subdomain.Forces = Vector.CreateZero(linearSystem.Size);
-                //}
-                this.InitializeFreeAndPrescribedDofsInitialDisplacementVectors();
+				//TODO Ger: to pou vrisketai h dhmiourgia tou problem structural prin to orderdofs dld
+				//TODO Ger: The disposable solver sould be create here or in the else section
+				//solver = createSolver(model);
+				//solver.OrderDofs(false); //model.GlobalDofOrdering = solver.DofOrderer.OrderDofs(model); //TODO find out if new structures cause any problems
+				//foreach (ILinearSystem linearSystem in solver.LinearSystems.Values)
+				//{
+				//    linearSystem.Reset(); //TODO find out if new structures cause any problems
+				//    linearSystem.Subdomain.Forces = Vector.CreateZero(linearSystem.Size);
+				//}
+				this.InitializeFreeAndPrescribedDofsInitialDisplacementVectors();
             }
             else
             {
@@ -393,9 +476,10 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             }
 
 
-            var elementProvider = new ElementStructuralStiffnessProvider();                      
-            #region INTEGRATION constitutive Matrix            
-            var integrationSimultaneous = new GenericSubdomainCalculationsAndAssembly<TMatrix>();
+			trueStressVec = new double[3];
+			var elementProvider = new ElementStructuralStiffnessProvider();
+			#region INTEGRATION constitutive Matrix            
+			var integrationSimultaneous = new GenericSubdomainCalculationsAndAssembly<TMatrix>();
             (IGlobalVector[] KfpDqSubdomains, double[][] KppDqVectors) =
                 integrationSimultaneous.UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultipleObje(model, elementProvider, scaleTransitions, boundaryNodes, boundaryElements, solver, globalAlgebraicModel);
 
@@ -423,27 +507,35 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 			#endregion
 
 			#region constitutive tensors transformation methods
-			
-            constitutiveMatrix = constitutiveMat;
-            #endregion
+			// transformation gia to shell 
+			(var transformedTrueStressVec, var transformedConstitutiveMat) = StressesAndConstitutiveMatrixTransformation(trueStressVec, constitutiveMat);
+			this.constitutiveMatrix = transformedConstitutiveMat;
+			trueStressVec = transformedTrueStressVec;
+			#endregion
 
-            //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
-            this.modified = CheckIfConstitutiveMatrixChanged();
+			//PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
+			this.modified = CheckIfConstitutiveMatrixChanged();
 
             if (EstimateOnlyLinearResponse)
             {
-                model = null;
-                boundaryElements = null;
-                boundaryNodes = null;
-                rveBuilder = null;
-                uInitialFreeDOFDisplacementsPerSubdomain = null;
-                initialConvergedBoundaryDisplacements = null;
-                Cijrs_prev = null;
-            }
+				model = null;
+				boundaryElements = null;
+				boundaryNodes = null;
+				NormalVectorV3 = null;
+				TangentVectorV1 = null;
+				TangentVectorV2 = null;
+				rveBuilder = null;
+				uInitialFreeDOFDisplacementsPerSubdomain = null;
+				initialConvergedBoundaryDisplacements = null;
+				trueStressVec = null;
+				transformationMatrix = null;
+				Cijrs_prev = null;
+			}
         }
 
 		#region transformation methods
 		//TODO: implement and use methods for shell transformation but they can be placed externally in a class for all 2D materials to be used from shells.
+		//  or delete if unenecessary
 		private double[] transformTrueStressVec(double[] trueStressVec, double[] tangent1, double[] tangent2, double[] normal)
 		{
 			throw new NotImplementedException();
@@ -531,10 +623,9 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
 
     }
-	//Microstructure3DevelopMultipleSubdomainsUseBaseSimuRandObjSmallStrains2DplaneStress
-	//Origin  Microstructure3DevelopMultipleSubdomainsUseBaseSimuRandObj
-	//modifications apo defgrad egine smallstrains2d me odhgo Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrains2D se sxesh me to Microstructure3DevelopMultipleSubdomainsUseBase.cs
-
+	//Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRandObj
+	// Origin: Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand
+	// modifications: --> updated se v2
 
 
 
