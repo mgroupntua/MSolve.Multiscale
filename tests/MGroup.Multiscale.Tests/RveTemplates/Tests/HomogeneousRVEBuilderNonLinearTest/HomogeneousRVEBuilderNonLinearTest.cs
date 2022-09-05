@@ -1,42 +1,38 @@
-namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShMultipleTest
+namespace MGroup.Multiscale.Tests.RveTemplates.Tests.HomogeneousRVEBuilderNonLinearTest
 {
 	using System;
 	using System.Collections.Generic;
 	using System.Text;
-
-	using MGroup.Constitutive.Structural;
 	using MGroup.Constitutive.Structural.BoundaryConditions;
-	using MGroup.LinearAlgebra.Commons;
-	using MGroup.LinearAlgebra.Vectors;
+	using MGroup.Constitutive.Structural;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Discretization.Entities;
-	using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
-	using MGroup.MSolve.Solution.LinearSystem;
-	using MGroup.Multiscale.RveTemplates;
-	using MGroup.Multiscale.Tests.FEMpartB;
+	using MGroup.MSolve.MultiscaleAnalysis;
+	using MGroup.NumericalAnalyzers.Discretization.NonLinear;
 	using MGroup.NumericalAnalyzers;
-	using MGroup.NumericalAnalyzers.Logging;
 	using MGroup.Solvers.Direct;
 
 	using Xunit;
+	using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
+	using MGroup.Multiscale.Tests.FEMpartB;
 
-	public class RveGrShMultipleTest
+	public class HomogeneousRVEBuilderNonLinearTest
 	{
 		[Fact]
-		public static void CheckRveGrShMultipleExample()
+		public static void CheckHomogeneousRVEBuilderNonLinearExample()
 		{
-			double[] computedDisplacements = SolveRveGrShMultipleExample();
-			string resultsPath = "..\\..\\RveTemplates\\Input\\ExpectedResults\\RveGrShMultipleResults.txt";
+			double[] computedDisplacements = SolveHomogeneousRVEBuilderNonLinearExample();
+			string resultsPath = "..\\..\\RveTemplates\\Input\\ExpectedResults\\HomogeneousRVEBuilderNonLinearResults.txt";
 			double[] expectedDisplacements = PrintUtilities.ReadVector(resultsPath);
 
-			bool check = AreDisplacementsSame(expectedDisplacements, computedDisplacements);
+			bool check = ComparisonMetods.AreDisplacementsSame(expectedDisplacements, computedDisplacements);
 
 			Assert.True(check);
 		}
 
-		public static double[] SolveRveGrShMultipleExample()
+		public static double[] SolveHomogeneousRVEBuilderNonLinearExample()
 		{
-			var rve = new RveGrShMultiple(0);
+			var rve = new HomogeneousRVEBuilderNonLinear();
 			var tuple1 = rve.GetModelAndBoundaryNodes();
 			Model model = tuple1.Item1;
 
@@ -65,37 +61,21 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShMultipleTest
 			var solver = solverFactory.BuildSolver(algebraicModel);
 
 			var problem = new ProblemStructural(model, algebraicModel, solver);
-			var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
-			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, linearAnalyzer);
-
-			var watchDofs = new List<(INode node, IDofType dof)>()
+			var loadControlAnalyzerBuilder = new LoadControlAnalyzer.Builder(model, algebraicModel, solver, problem, numIncrements: 2)
 			{
-				(model.NodesDictionary[50], StructuralDof.TranslationX),
-				(model.NodesDictionary[50], StructuralDof.TranslationY),
-				(model.NodesDictionary[50], StructuralDof.TranslationZ)
+				ResidualTolerance = 1E-3,
+				MaxIterationsPerIncrement = 1000,
+				NumIterationsForMatrixRebuild = 2
 			};
+			var loadControlAnalyzer = loadControlAnalyzerBuilder.Build();
 
-			linearAnalyzer.LogFactory = new LinearAnalyzerLogFactory(watchDofs, algebraicModel);
+			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, loadControlAnalyzer);
 
 			staticAnalyzer.Initialize();
 			staticAnalyzer.Solve();
 			var solution = solver.LinearSystem.Solution.SingleVector;
 
 			return solution.CopyToArray();
-		}
-
-		public static bool AreDisplacementsSame(double[] expectedValues,
-			double[] computedValues, double tol = 1E-8)
-		{
-			var comparer = new ValueComparer(tol);
-			for (int i1 = 0; i1 < expectedValues.GetLength(0); i1++)
-			{
-				if (!comparer.AreEqual(expectedValues[i1], computedValues[i1]))
-				{
-					return false;
-				}
-			}
-			return true;
 		}
 	}
 }

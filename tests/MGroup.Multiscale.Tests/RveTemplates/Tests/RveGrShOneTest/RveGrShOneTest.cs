@@ -6,6 +6,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShOneTest
 
 	using MGroup.Constitutive.Structural;
 	using MGroup.Constitutive.Structural.BoundaryConditions;
+	using MGroup.LinearAlgebra.Commons;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Discretization.Entities;
@@ -27,7 +28,8 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShOneTest
 			string resultsPath = "..\\..\\RveTemplates\\Input\\ExpectedResults\\RveGrShOneResults.txt";
 			double[] expectedDisplacements = PrintUtilities.ReadVector(resultsPath);
 
-			bool check = ComparisonMetods.AreDisplacementsSame(expectedDisplacements, computedDisplacements);
+			bool check = AreDisplacementsSame(expectedDisplacements, computedDisplacements);
+			Console.WriteLine();
 			Assert.True(check);
 		}
 
@@ -70,6 +72,20 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShOneTest
 			var solution = solver.LinearSystem.Solution.SingleVector;
 
 			return solution.CopyToArray();
+		}
+
+		public static bool AreDisplacementsSame(double[] expectedValues,
+			double[] computedValues, double tol = 1E-9)
+		{
+			var comparer = new ValueComparer(tol);
+			for (int i1 = 0; i1 < expectedValues.GetLength(0); i1++)
+			{
+				if (!comparer.AreEqual(expectedValues[i1], computedValues[i1]))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 }
