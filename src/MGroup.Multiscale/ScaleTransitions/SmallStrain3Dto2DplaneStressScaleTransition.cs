@@ -8,37 +8,28 @@ using System.Collections.Generic;
 namespace MGroup.MSolve.MultiscaleAnalysis
 {
     /// <summary>
-    /// Micro to macro transitions for 3D problems
+    /// Micro to macro transitions for (3D degenerate to) 2D plane stress problems
     /// Authors: Gerasimos Sotiropoulos
     /// </summary>
-    public class SmallStrain3DScaleTransition : IScaleTransitions
+    public class SmallStrain3Dto2DplaneStressScaleTransition : IScaleTransitions
     {
-        public SmallStrain3DScaleTransition()
+        public SmallStrain3Dto2DplaneStressScaleTransition()
         { }
 
         public double[] MacroToMicroTransition(Node boundaryNode, double[] MacroScaleVariable)
         {
-            double[,] Dq_nodal = new double[6,3]; // Prosoxh: pithanes diorthoseis eis triploun
+            double[,] Dq_nodal = new double[3,2]; // Prosoxh: pithanes diorthoseis eis triploun
             Dq_nodal[0, +0] = boundaryNode.X;
             Dq_nodal[1, +1] = boundaryNode.Y;
-            Dq_nodal[2, +2] = boundaryNode.Z;
-
-            Dq_nodal[3, +0] = 0.5*boundaryNode.Y;
-            Dq_nodal[3, +1] = 0.5*boundaryNode.X;
-
-            Dq_nodal[4, +1] = 0.5*boundaryNode.Z;
-            Dq_nodal[4, +2] = 0.5*boundaryNode.Y;
+            Dq_nodal[2, +0] = 0.5*boundaryNode.Y;
+            Dq_nodal[2, +1] = 0.5 * boundaryNode.X;
 
 
-            Dq_nodal[5, +0] = 0.5*boundaryNode.Z;
-            Dq_nodal[5, +2] = 0.5*boundaryNode.X;
+            double[] microVariable = new double[2];            
 
-
-            double[] microVariable = new double[3];            
-
-            for (int i1 = 0; i1 < 3; i1++)
+            for (int i1 = 0; i1 < 2; i1++)
             {
-                for (int j1 = 0; j1 < 6; j1++)
+                for (int j1 = 0; j1 < 3; j1++)
                 {
                     microVariable[i1] += Dq_nodal[j1, i1] * MacroScaleVariable[j1]; //einai sunolikh 
                 }
@@ -49,26 +40,17 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         public double[] MicroToMacroTransition(INode boundaryNode, double[] MicroScaleVariable)
         {
-            double[,] Dq_nodal = new double[6, 3]; // Prosoxh: pithanes diorthoseis eis triploun
+            double[,] Dq_nodal = new double[3, 2];
             Dq_nodal[0, +0] = boundaryNode.X;
             Dq_nodal[1, +1] = boundaryNode.Y;
-            Dq_nodal[2, +2] = boundaryNode.Z;
+            Dq_nodal[2, +0] = 0.5 * boundaryNode.Y;
+            Dq_nodal[2, +1] = 0.5 * boundaryNode.X;
 
-            Dq_nodal[3, +0] = 0.5 * boundaryNode.Y;
-            Dq_nodal[3, +1] = 0.5 * boundaryNode.X;
-
-            Dq_nodal[4, +1] = 0.5 * boundaryNode.Z;
-            Dq_nodal[4, +2] = 0.5 * boundaryNode.Y;
-
-
-            Dq_nodal[5, +0] = 0.5 * boundaryNode.Z;
-            Dq_nodal[5, +2] = 0.5 * boundaryNode.X;
-
-            double[] macroVariable = new double[6];
+            double[] macroVariable = new double[3];
             //
-            for (int i1 = 0; i1 < 6; i1++)
+            for (int i1 = 0; i1 < 3; i1++)
             {
-                for (int j1 = 0; j1 < 3; j1++)
+                for (int j1 = 0; j1 < 2; j1++)
                 {
                     macroVariable[i1] += Dq_nodal[ i1, j1] * MicroScaleVariable[j1]; //einai sunolikh 
                 }
@@ -79,40 +61,32 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         public int PrescribedDofsPerNode()
         {
-            return 3;
+            return 2;
         }
 
         public int MacroscaleVariableDimension()
         {
-            return 6;
+            return 3;
         }
 
         public void ModifyMicrostructureTotalPrescribedBoundaryDisplacementsVectorForMacroStrainVariable(Node boundaryNode,
-            double[] smallStrain3Dmacro, Dictionary<int, Dictionary<IDofType, double>> totalPrescribedBoundaryDisplacements)
+            double[] smallStrain2Dmacro, Dictionary<int, Dictionary<IDofType, double>> totalPrescribedBoundaryDisplacements)
         {
-            double[,] Dq_nodal = new double[6, 3]; // Prosoxh: pithanes diorthoseis eis triploun
+            //double[,] Dq_nodal = new double[9, 3];
+            double[,] Dq_nodal = new double[3, 2];
             Dq_nodal[0, +0] = boundaryNode.X;
             Dq_nodal[1, +1] = boundaryNode.Y;
-            Dq_nodal[2, +2] = boundaryNode.Z;
-
-            Dq_nodal[3, +0] = 0.5 * boundaryNode.Y;
-            Dq_nodal[3, +1] = 0.5 * boundaryNode.X;
-
-            Dq_nodal[4, +1] = 0.5 * boundaryNode.Z;
-            Dq_nodal[4, +2] = 0.5 * boundaryNode.Y;
-
-
-            Dq_nodal[5, +0] = 0.5 * boundaryNode.Z;
-            Dq_nodal[5, +2] = 0.5 * boundaryNode.X;
+            Dq_nodal[2, +0] = 0.5 * boundaryNode.Y;
+            Dq_nodal[2, +1] = 0.5 * boundaryNode.X;
 
             //double[] thesi_prescr_xyz = new double[2];
-            double[] u_prescr_xyz_sunol = new double[3];
+            double[] u_prescr_xyz_sunol = new double[2];
 
-            for (int i1 = 0; i1 < 3; i1++)
+            for (int i1 = 0; i1 < 2; i1++)
             {
-                for (int j1 = 0; j1 < 6; j1++)
+                for (int j1 = 0; j1 < 3; j1++)
                 {
-                    u_prescr_xyz_sunol[i1] += Dq_nodal[j1, i1] * smallStrain3Dmacro[j1]; //einai sunolikh 
+                    u_prescr_xyz_sunol[i1] += Dq_nodal[j1, i1] * smallStrain2Dmacro[j1]; //einai sunolikh 
                 }
             }
 
@@ -125,7 +99,6 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             Dictionary<IDofType, double> totalBoundaryNodalDisplacements = new Dictionary<IDofType, double>();
             totalBoundaryNodalDisplacements.Add(StructuralDof.TranslationX, u_prescr_xyz_sunol[0]);
             totalBoundaryNodalDisplacements.Add(StructuralDof.TranslationY, u_prescr_xyz_sunol[1]);
-            totalBoundaryNodalDisplacements.Add(StructuralDof.TranslationZ, u_prescr_xyz_sunol[2]);
             
 
             totalPrescribedBoundaryDisplacements.Add(boundaryNode.ID, totalBoundaryNodalDisplacements);
@@ -133,18 +106,30 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         public void ImposeAppropriateAndRigidBodyConstraintsPerBoundaryNode(Model model, Node boundaryNode, Dictionary<Node, IList<IStructuralDofType>> RigidBodyNodeConstraints)
         {
-            throw new System.NotSupportedException();
+            if (RigidBodyNodeConstraints.ContainsKey(boundaryNode))
+            {
+				var constraints = new List<INodalDisplacementBoundaryCondition>();
+				foreach (IStructuralDofType constraint in RigidBodyNodeConstraints[boundaryNode])
+                {
+					//model.NodesDictionary[boundaryNode.ID].Constraints.Add(new Constraint() { DOF = constraint });
+					constraints.Add(new NodalDisplacement(boundaryNode, constraint, amount: 0d));
+				}
+				model.BoundaryConditions.Add(new StructuralBoundaryConditionSet(constraints, new NodalLoad[] { }));//.
+			}
+            else
+            {
+				var constraints = new List<INodalDisplacementBoundaryCondition>();
+				//model.NodesDictionary[boundaryNode.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+				//model.NodesDictionary[boundaryNode.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+				constraints.Add(new NodalDisplacement(boundaryNode, StructuralDof.TranslationX, amount: 0d));
+				constraints.Add(new NodalDisplacement(boundaryNode, StructuralDof.TranslationY, amount: 0d));
+				model.BoundaryConditions.Add(new StructuralBoundaryConditionSet(constraints, new NodalLoad[] { }));//.
+			}
         }
 
         public void ImposeAppropriateConstraintsPerBoundaryNode(Model model, Node boundaryNode)
         {
-            var constraints = new List<INodalDisplacementBoundaryCondition>();
-            constraints.Add(new NodalDisplacement(boundaryNode, StructuralDof.TranslationX, amount: 0d));
-            constraints.Add(new NodalDisplacement(boundaryNode, StructuralDof.TranslationY, amount: 0d));
-            constraints.Add(new NodalDisplacement(boundaryNode, StructuralDof.TranslationZ, amount: 0d));
-            model.BoundaryConditions.Add(new StructuralBoundaryConditionSet(constraints, new NodalLoad[] { }));//.
-           
-           
+            throw new System.NotSupportedException();
         }
     }
 }
