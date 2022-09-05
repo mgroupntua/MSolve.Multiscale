@@ -1,4 +1,5 @@
-﻿using MGroup.MSolve.Discretization.Dofs;
+using MGroup.Constitutive.Structural;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Entities;
 using System.Collections.Generic;
 
@@ -11,6 +12,6 @@ namespace MGroup.MSolve.MultiscaleAnalysis.Interfaces
     /// </summary>
     public interface IdegenerateRVEbuilder : IRVEbuilder
     {
-        Dictionary<Node, IList<IDofType>> GetModelRigidBodyNodeConstraints(Model model);
+        Dictionary<Node, IList<IStructuralDofType>> GetModelRigidBodyNodeConstraints(Model model);
     }
 }

@@ -1,4 +1,4 @@
-﻿using MGroup.Constitutive.Structural;
+using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.BoundaryConditions;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Entities;
@@ -124,7 +124,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             model.BoundaryConditions.Add(new StructuralBoundaryConditionSet(constraints, new NodalLoad[] { }));//.
         }
 
-        public void ImposeAppropriateAndRigidBodyConstraintsPerBoundaryNode(Model model, Node boundaryNode, Dictionary<Node, IList<IDofType>> RigidBodyNodeConstraints)
+        public void ImposeAppropriateAndRigidBodyConstraintsPerBoundaryNode(Model model, Node boundaryNode, Dictionary<Node, IList<IStructuralDofType>> RigidBodyNodeConstraints)
         {
             throw new System.NotSupportedException();
         }
