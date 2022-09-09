@@ -29,7 +29,6 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.RveGrShOneTest
 			double[] expectedDisplacements = PrintUtilities.ReadVector(resultsPath);
 
 			bool check = AreDisplacementsSame(expectedDisplacements, computedDisplacements);
-			Console.WriteLine();
 			Assert.True(check);
 		}
 

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.FEM.Structural.Embedding;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Multiscale.SupportiveClasses;
 
 namespace MGroup.Multiscale.RveTemplates

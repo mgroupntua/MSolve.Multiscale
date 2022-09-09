@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
-
 using MGroup.FEM;
 using MGroup.FEM.Structural.Embedding;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Multiscale.SupportiveClasses;
 
 namespace MGroup.Multiscale.RveTemplates
@@ -61,13 +59,13 @@ namespace MGroup.Multiscale.RveTemplates
 			//grapheneSheetParameters gp;
 			var rve_id_data = RVE_id.ToString();
 
-			renumbering_vector_path = @"E:\Documents\Εργασία\NComp\UpdateMultiscaleTest\UpdateMultiScaleTest\UpdateMultiScaleTest\MSolve.Multiscale-develop\tests\MGroup.Multiscale.Tests\RveTemplates\Input\RveGrShMultiple\rve_no_1\REF_new_total_numbering.txt";
+			renumbering_vector_path = "..\\..\\..\\..\\tests\\MGroup.Multiscale.Tests\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_1\\REF_new_total_numbering.txt";
 			renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
 
 			string Fxk_p_komvoi_rve_path = "..\\..\\..\\MGroup.Multiscale.Tests\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\Fxk_p_komvoi_rve.txt";
 			Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);
 
-			string o_xsunol_input_path_gen = @"E:\Documents\Εργασία\NComp\UpdateMultiscaleTest\UpdateMultiScaleTest\UpdateMultiScaleTest\MSolve.Multiscale-develop\tests\MGroup.Multiscale.Tests\RveTemplates\Input\RveGrShMultiple\rve_no_1\o_xsunol_gs_";
+			string o_xsunol_input_path_gen = "..\\..\\..\\..\\tests\\MGroup.Multiscale.Tests\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_1\\o_xsunol_gs_";
 			o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
 			o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";
 			string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2\RVE_database\rve_no_{0}";
@@ -95,6 +93,7 @@ namespace MGroup.Multiscale.RveTemplates
 			int totalSubdomains = 8;
 			DdmCalculationsGeneral.BuildModelInterconnectionData(model);
 			var decomposer = new AutomaticDomainDecomposer(model, totalSubdomains);
+			Console.WriteLine();
 			decomposer.UpdateModel();
 			var subdHexaIds = DdmCalculationsGeneral.DetermineHexaElementsSubdomainsFromModel(model);
 

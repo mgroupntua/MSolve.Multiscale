@@ -30,20 +30,24 @@ using ISAAR.MSolve.MultiscaleAnalysis;
 //using ISAAR.MSolve.Solvers.Direct;
 //using ISAAR.MSolve.Tests.FEMpartB;
 //using JetBrains.dotMemoryUnit;
-using MathNet.Numerics.LinearAlgebra;
+//using MathNet.Numerics.LinearAlgebra;
 
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.Constitutive.Structural.Shells;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.MultiscaleAnalysis;
 using MGroup.Multiscale;
 using MGroup.Multiscale.RveTemplatesPaper;
+using MGroup.Multiscale.SupportiveClasses;
 
-using Troschuetz.Random;
+using MiMsolve.SolutionStrategies;
+
+//using Troschuetz.Random;
 
 using Xunit;
 
-using MatlabWriter = MathNet.Numerics.Data.Matlab.MatlabWriter;
+//using MatlabWriter = MathNet.Numerics.Data.Matlab.MatlabWriter;
 
 //[assembly: SuppressXUnitOutputException]
 
@@ -73,24 +77,23 @@ namespace ISAAR.MSolve.Tests
 
 			//WITH GMSH GEOMETRY DATA
 			var homogeneousRveBuilder1 =
-				new GmshCompositeRveBuilder(outterMaterial, innerMaterial, 2, 2, 2, @"E:\Documents\Εργασία\NComp\CreateRVE_02\CreateRVE_02\ISAAR.MSolve.Tests\RveTemplates\Input\Continuum\1ball.msh");
+				new GmshCompositeRveBuilder(outterMaterial, innerMaterial, 2, 2, 2, "..\\..\\RveTemplates\\Input\\Continuum\\1ball.msh");
 
 
-			IContinuumMaterial3D microstructure3 = new Microstructure3D(homogeneousRveBuilder1,
-				model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1);
+			IContinuumMaterial3D microstructure3 = new Microstructure3D<SkylineMatrix>(homogeneousRveBuilder1, false, 1, new SkylineSolverPrefernce());
 			//IContinuumMaterial3DDefGrad microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 			double[,] consCheck1 = new double[6, 6];
 			for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
 
-			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { 0.010, 0, 0, 0, 0, 0 });
-			double[] stressesCheck3 = new double[6] { microstructure3.Stresses[0], microstructure3.Stresses[1], microstructure3.Stresses[2], microstructure3.Stresses[3], microstructure3.Stresses[4], microstructure3.Stresses[5] };
-			microstructure3.SaveState();
-			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { 0, 0, 0, 0, 0.020, 0 });
-			double[] stressesCheck4 = new double[6] { microstructure3.Stresses[0], microstructure3.Stresses[1], microstructure3.Stresses[2], microstructure3.Stresses[3], microstructure3.Stresses[4], microstructure3.Stresses[5] };
+			double[] stresses = microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { 0.010, 0, 0, 0, 0, 0 });
+			double[] stressesCheck3 = new double[6] { stresses[0], stresses[1], stresses[2], stresses[3], stresses[4], stresses[5] };
+			microstructure3.CreateState();
+			stresses = microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { 0, 0, 0, 0, 0.020, 0 });
+			double[] stressesCheck4 = new double[6] { stresses[0], stresses[1], stresses[2], stresses[3], stresses[4], stresses[5] };
 
-			microstructure3.SaveState();
-			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { 0.030, 0, 0, 0, 0, 0 });
-			double[] stressesCheck5 = new double[6] { microstructure3.Stresses[0], microstructure3.Stresses[1], microstructure3.Stresses[2], microstructure3.Stresses[3], microstructure3.Stresses[4], microstructure3.Stresses[5] };
+			microstructure3.CreateState();
+			stresses = microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[6] { 0.030, 0, 0, 0, 0, 0 });
+			double[] stressesCheck5 = new double[6] { stresses[0], stresses[1], stresses[2], stresses[3], stresses[4], stresses[5] };
 			var Matrix1 = Matrix.CreateZero(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { Matrix1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
 
 			//COMPARISON
@@ -133,67 +136,65 @@ namespace ISAAR.MSolve.Tests
 			return true;
 		}
 
-		[Fact]
-		public void TestElasticAndMultiscaleMatricesTet()
-		{
-			var material3 = new ShellElasticMaterial2Dtransformationb(youngModulus: 4.3210, poissonRation: 0.0)
-			{
-				TangentVectorV1 = new double[3] { 1, 0, 0 },
-				TangentVectorV2 = new double[3] { 0, 1, 0 }
-			};
+		//[Fact]
+		//public void TestElasticAndMultiscaleMatricesTet()
+		//{
+		//	var material3 = new ShellElasticMaterial2Dtransformationb(youngModulus: 4.3210, poissonRation: 0.0)
+		//	{
+		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
+		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
+		//	};
 
-			//var trandom = new TRandom();
-			//var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
-			var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
+		//	//var trandom = new TRandom();
+		//	//var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
+		//	var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
 
-			var innerMaterial = new ElasticMaterial3DTotalStrain(0, 34);
-
-
-			var homogeneousRveBuilder1 =
-				new CompositeMaterialModeluilderTet2(outterMaterial, innerMaterial, 100, 100, 100);
-
-			var material4 = new MicrostructureShell2D(homogeneousRveBuilder1,
-				model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1)
-			{
-				TangentVectorV1 = new double[3] { 1, 0, 0 },
-				TangentVectorV2 = new double[3] { 0, 1, 0 }
-			};
-			material4.UpdateMaterial(new double[] { 0, 0, 0 });
-		}
-
-		[Fact]
-		public void CompositeRveWithElastic()
-		{
-			var material3 = new ShellElasticMaterial2Dtransformationb(youngModulus: 4.3210, poissonRation: 0.0)
-			{
-				TangentVectorV1 = new double[3] { 1, 0, 0 },
-				TangentVectorV2 = new double[3] { 0, 1, 0 }
-			};
-
-			//var trandom = new TRandom();
-			//var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
-			var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
-
-			var innerMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
+		//	var innerMaterial = new ElasticMaterial3DTotalStrain(0, 34);
 
 
-			var homogeneousRveBuilder1 =
-				new GmshCompositeRveBuilder(outterMaterial, innerMaterial, 2, 2, 2, "..\\..\\..\\RveTemplates\\Input\\Continuum\\t16Solid_physical_entities_no_volume_tag_change_More_inclusions.msh");
+		//	var homogeneousRveBuilder1 =
+		//		new CompositeMaterialModelBuilderTet2(outterMaterial, innerMaterial, 100, 100, 100);
 
-			var material4 = new MicrostructureShell2D(homogeneousRveBuilder1,
-				model => (new SkylineSolver.Builder()).BuildSolver(model), true, 1)
-			{
-				TangentVectorV1 = new double[3] { 1, 0, 0 },
-				TangentVectorV2 = new double[3] { 0, 1, 0 }
-			};
-			//material4.UpdateMaterial(new double[] { 0, 0, 0 });
+		//	var material4 = new MicrostructureShell2D<SkylineMatrix>(homogeneousRveBuilder1, false, 1, new SkylineSolverPrefernce())
+		//	{
+		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
+		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
+		//	};
+		//	material4.UpdateConstitutiveMatrixAndEvaluateResponse(new double[] { 0, 0, 0 });
+		//}
 
-			var cons = material4.ConstitutiveMatrix;
+		//[Fact]
+		//public void CompositeRveWithElastic()
+		//{
+		//	var material3 = new ShellElasticMaterial2Dtransformationb(youngModulus: 4.3210, poissonRation: 0.0)
+		//	{
+		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
+		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
+		//	};
 
-			Assert.Equal(material3.ConstitutiveMatrix[0, 0], cons[0, 0], 7);
-			Assert.Equal(material3.ConstitutiveMatrix[1, 1], cons[1, 1], 7);
-			Assert.Equal(material3.ConstitutiveMatrix[2, 2], cons[2, 2], 7);
-		}
+		//	//var trandom = new TRandom();
+		//	//var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
+		//	var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
+
+		//	var innerMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
+
+
+		//	var homogeneousRveBuilder1 =
+		//		new GmshCompositeRveBuilder(outterMaterial, innerMaterial, 2, 2, 2, "..\\..\\..\\RveTemplates\\Input\\Continuum\\t16Solid_physical_entities_no_volume_tag_change_More_inclusions.msh");
+
+		//	var material4 = new MicrostructureShell2D<SkylineMatrix>(homogeneousRveBuilder1, true, 1, new SkylineSolverPrefernce())
+		//	{
+		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
+		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
+		//	};
+		//	//material4.UpdateMaterial(new double[] { 0, 0, 0 });
+
+		//	var cons = material4.ConstitutiveMatrix;
+
+		//	Assert.Equal(material3.ConstitutiveMatrix[0, 0], cons[0, 0], 7);
+		//	Assert.Equal(material3.ConstitutiveMatrix[1, 1], cons[1, 1], 7);
+		//	Assert.Equal(material3.ConstitutiveMatrix[2, 2], cons[2, 2], 7);
+		//}
 
 
 	}

@@ -1,13 +1,16 @@
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.Discretization.Entities;
 //using MGroup.Materials;
 //using MGroup.Materials.Interfaces;
 using MGroup.MSolve.MultiscaleAnalysis;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.MSolve.Solution.LinearSystem;
 //using MGroup.Multiscale.Interfaces;
 using MGroup.Multiscale.RveTemplates;
+using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;
 
 using MiMsolve.SolutionStrategies;
@@ -16,7 +19,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 {
 	class OneRveExample // palio: "SeparateCodeCheckingClass4 "
 	{
-		public static (double[], double[], double[,], IVector, IVector) Check_Graphene_rve_serial() //palio "Check_Graphene_rve_Obje_Integration()"
+		public static (double[], double[], double[,], double[], double[]) Check_Graphene_rve_serial() //palio "Check_Graphene_rve_Obje_Integration()"
 		{
 			//Origin: SeparateCodeCheckingClass4.Check_Graphene_rve_Obje_Integration apo to branch: example/ms_development_nl_elements_merge
 			//modifications: update kai tha xrhsimopoithei o GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostData 
@@ -46,15 +49,17 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 			//IContinuumMaterial3DDefGrad microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 			double[,] consCheck1 = new double[6, 6];
 			for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
-
+			
 			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[9] { 1.05, 1, 1, 0, 0, 0, 0, 0, 0 });
 			double[] stressesCheck3 = microstructure3.Stresses;
 			microstructure3.CreateState();
-			IVector uInitialFreeDOFs_state1 = (IVector) microstructure3.uInitialFreeDOFDisplacementsPerSubdomain.Copy();
+			var uInitialFreeDOFs_state1 = microstructure3.uInitialFreeDOFDisplacementsPerSubdomain.Copy();
+			var array_uInitialFreeDOFs_state1 = RetrieveDisplacementsOfFreeDofs(microstructure3.globalAlgebraicModel, uInitialFreeDOFs_state1);
 
 			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
 			double[] stressesCheck4 = microstructure3.Stresses;
-			IVector uInitialFreeDOFs_state2 = (IVector) microstructure3.uInitialFreeDOFDisplacementsPerSubdomain.Copy();
+			var uInitialFreeDOFs_state2 = microstructure3.uInitialFreeDOFDisplacementsPerSubdomain.Copy();
+			var array_uInitialFreeDOFs_state2 = RetrieveDisplacementsOfFreeDofs(microstructure3.globalAlgebraicModel, uInitialFreeDOFs_state2);
 
 			//PrintUtilities.WriteToFileVector(stressesCheck3, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck3.txt");
 			//PrintUtilities.WriteToFileVector(stressesCheck4, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck4.txt");
@@ -62,7 +67,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 			//PrintUtilities.WriteToFileVector(uInitialFreeDOFs_state1.CopyToArray(), @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\uInitialFreeDOFs_state1.txt");
 			//PrintUtilities.WriteToFileVector(uInitialFreeDOFs_state2.CopyToArray(), @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\uInitialFreeDOFs_state2.txt");
 
-			return (stressesCheck3, stressesCheck4, consCheck1, uInitialFreeDOFs_state1, uInitialFreeDOFs_state2);
+			return (stressesCheck3, stressesCheck4, consCheck1, array_uInitialFreeDOFs_state1, array_uInitialFreeDOFs_state2);
 		}
 
 		public static (int[], int[], int[]) Check_Graphene_rve_parallel() //palio "Check_Graphene_rve_Obje_Integration()"
@@ -112,6 +117,21 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks2
 			double[] stressesCheck4 = microstructure3.Stresses;
 
 
+		}
+
+		public static double[] RetrieveDisplacementsOfFreeDofs(GlobalAlgebraicModel<SkylineMatrix> globalAlgebraicModel, IGlobalVector uInitialFreeDOFDisplacementsPerSubdomain)
+		{
+			var uInitialFreeDOFs_state1_Data = globalAlgebraicModel.ExtractAllResults(uInitialFreeDOFDisplacementsPerSubdomain);
+			double[] uInitialFreeDOFs_state1_array = new double[globalAlgebraicModel.SubdomainFreeDofOrdering.NumFreeDofs];
+			int counter = 0;
+			foreach ((int node, int dof, int freeDofIdx) in globalAlgebraicModel.SubdomainFreeDofOrdering.FreeDofs)
+			{
+				uInitialFreeDOFs_state1_array[counter] = uInitialFreeDOFs_state1_Data.Data[node, dof];
+				counter++;
+			}
+
+
+			return uInitialFreeDOFs_state1_array;
 		}
 
 		#region transformation methods

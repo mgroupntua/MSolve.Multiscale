@@ -187,15 +187,15 @@ namespace MGroup.Multiscale.RveTemplatesPaper
             return  new Tuple<Model, Dictionary<int, INode>, double>(model, boundaryNodes, L01*L02*L03); 
         }
 
-        public Dictionary<Node, IList<IDofType>> GetModelRigidBodyNodeConstraints(Model model)
+        public Dictionary<Node, IList<IStructuralDofType>> GetModelRigidBodyNodeConstraints(Model model)
         {
 
-            Dictionary<Node, IList<IDofType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<IDofType>>();
+            Dictionary<Node, IList<IStructuralDofType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<IStructuralDofType>>();
             var rigidNodes = RigidNodes;
 
-            RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[rigidNodes[0]], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
-            RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[rigidNodes[1]], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
-            RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[rigidNodes[2]], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+            RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[rigidNodes[0]], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+            RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[rigidNodes[1]], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+            RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[rigidNodes[2]], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
             return RigidBodyNodeConstraints;
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
@@ -12,6 +12,7 @@ using System.Linq;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Constitutive.Structural;
 using MGroup.Solvers.Results;
+using MGroup.FEM.Structural.Embedding;
 
 namespace MGroup.MSolve.MultiscaleAnalysis
 {
@@ -254,7 +255,11 @@ namespace MGroup.MSolve.MultiscaleAnalysis
                                 foreach (IDofType dofTypeColumn in elementDOFTypes[j])
                                 {
                                     dofTypeColumnToNumber++;
-                                    int dofIdINode = ActiveDofs.GetIdOfDof(elementDOFTypes[i][dofTypeColumnToNumber]);
+									if (element is CohesiveShell8ToHexa20 && j == 39 && dofTypeColumnToNumber == 3)
+									{
+										Console.WriteLine();
+									}
+									int dofIdINode = ActiveDofs.GetIdOfDof(elementDOFTypes[j][dofTypeColumnToNumber]);
                                     bool isFree = freeDofs.TryGetValue(matrixAssemblyNodes[j].ID, dofIdINode, out int dofColumn);
                                     // v2.4 int dofColumn = nodalDOFsDictionary.ContainsKey(nodeColumn.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeColumn.ID][dofTypeColumn];
                                     if (isFree)// TODOGerasimos edw pithanws thelei kai elegxo alliws an den ta exoume afhsei constrained ta p kai einai elefthera px me to an anhkoun sto baoundary nodes

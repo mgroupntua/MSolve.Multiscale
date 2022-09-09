@@ -1,6 +1,6 @@
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Multiscale.SupportiveClasses;
 using System;
 using System.Collections.Generic;

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Net.NetworkInformation;
+using System.Threading;
 
 using MGroup.LinearAlgebra.Output;
 //using ISAAR.MSolve.Discretization.Interfaces;
@@ -16,11 +19,14 @@ namespace MGroup.Multiscale.SupportiveClasses
     {
         public static (double[,], List<int[,]>, List<int[,]> ) ReadFile(string path, bool printOutput)
         {
-            //string filePath = $@"C:\Users\acivi\Documents\notes_elegxoi_2\developGmsh_example\entityless\t16Solid.msh";
-            //string filePath = $@"C:\Users\acivi\Documents\notes_elegxoi_2\developGmsh_example\2nd iteration\t16Solid_physical_entities.msh";//.//.
-            //string filePath = $@"C:\Users\acivi\Documents\notes_elegxoi_2\developGmsh_example\2nd iteration\t16Solid_physical_entities_no_volume_tag_change_More_inclusions.msh";//.//.
-
-            var reader = new StreamReader(path);
+			//string filePath = $@"C:\Users\acivi\Documents\notes_elegxoi_2\developGmsh_example\entityless\t16Solid.msh";
+			//string filePath = $@"C:\Users\acivi\Documents\notes_elegxoi_2\developGmsh_example\2nd iteration\t16Solid_physical_entities.msh";//.//.
+			//string filePath = $@"C:\Users\acivi\Documents\notes_elegxoi_2\developGmsh_example\2nd iteration\t16Solid_physical_entities_no_volume_tag_change_More_inclusions.msh";//.//.
+			string CultureName = Thread.CurrentThread.CurrentCulture.Name;
+			CultureInfo ci = new CultureInfo(CultureName);
+			ci.NumberFormat.NumberDecimalSeparator = ".";
+			Thread.CurrentThread.CurrentCulture = ci;
+			var reader = new StreamReader(path);
 
             string line;
             #region Find nodes segment

@@ -181,8 +181,6 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 
 		public static double[] RetrieveDisplacementsOfFreeDofs(GlobalAlgebraicModel<SkylineMatrix> globalAlgebraicModel,IGlobalVector uInitialFreeDOFDisplacementsPerSubdomain)
 		{
-			
-
 			var uInitialFreeDOFs_state1_Data = globalAlgebraicModel.ExtractAllResults(uInitialFreeDOFDisplacementsPerSubdomain);
 			double[] uInitialFreeDOFs_state1_array = new double[globalAlgebraicModel.SubdomainFreeDofOrdering.NumFreeDofs];
 			int counter = 0;

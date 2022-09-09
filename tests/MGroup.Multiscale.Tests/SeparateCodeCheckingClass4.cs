@@ -80,7 +80,7 @@ namespace MGroup.Multiscale.Tests.FEMpartB
 
         }
 
-		public static (double[], double[], double[,], IVector, IVector) Check_Graphene_rve_Obje_Integration()
+		public static (double[], double[], double[,], double[], double[]) Check_Graphene_rve_Obje_Integration()
 		{
 			//Origin: SeparateCodeCheckingClass4.Check05bStressIntegrationObje_Integration parontos
 			//modifications: tha xrhsimopoithei o GrapheneBuilder...35...v2 gia epilush enos paradeigmatos GrapheneReinforcedRVEBuilderCHECK
@@ -110,15 +110,14 @@ namespace MGroup.Multiscale.Tests.FEMpartB
 			//IContinuumMaterial3DDefGrad microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 			double[,] consCheck1 = new double[6, 6];
 			for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
-
 			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[9] { 1.05, 1, 1, 0, 0, 0, 0, 0, 0 });
 			double[] stressesCheck3 = microstructure3.Stresses;
 			microstructure3.CreateState();
-			IVector uInitialFreeDOFs_state1 = (IVector)microstructure3.uInitialFreeDOFDisplacementsPerSubdomain.Copy();
+			var uInitialFreeDOFs_state1 = microstructure3.RetrieveDisplacementsOfFreeDofs();
 
 			microstructure3.UpdateConstitutiveMatrixAndEvaluateResponse(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
 			double[] stressesCheck4 = microstructure3.Stresses;
-			IVector uInitialFreeDOFs_state2 = (IVector)microstructure3.uInitialFreeDOFDisplacementsPerSubdomain.Copy();
+			var uInitialFreeDOFs_state2 = microstructure3.RetrieveDisplacementsOfFreeDofs();
 
 			//PrintUtilities.WriteToFileVector(stressesCheck3, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck3.txt");
 			//PrintUtilities.WriteToFileVector(stressesCheck4, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressesCheck4.txt");
