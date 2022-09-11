@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
+namespace MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses
 {
     /// <summary>
     /// renumbering of model based on nodes (and not dofs)

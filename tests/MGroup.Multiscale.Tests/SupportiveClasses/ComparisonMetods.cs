@@ -1,4 +1,4 @@
-﻿using MGroup.LinearAlgebra.Commons;
+using MGroup.LinearAlgebra.Commons;
 
 namespace MGroup.Multiscale.Tests.FEMpartB
 {

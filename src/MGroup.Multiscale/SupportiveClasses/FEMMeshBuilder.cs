@@ -21,6 +21,7 @@ using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 //using MGroup.MSolve.Discretization.Integration.Quadratures;
 //using MGroup.MSolve.Discretization.Interfaces;
 using MGroup.MSolve.Numerics.Integration.Quadratures;
+using MGroup.MSolve.Numerics.Interpolation;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
@@ -301,12 +302,9 @@ namespace MGroup.Multiscale.SupportiveClasses
 						model.NodesDictionary[globalNodeIDforlocalNode_i[5]],
 						model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
 						model.NodesDictionary[globalNodeIDforlocalNode_i[7]]};
-						var e1 = new Hexa8NonLinear(elementNodes, material1, MSolve.Numerics.Integration.Quadratures.GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
+						var e1 = new Hexa8NonLinear(elementNodes, material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
 						e1.ID = ElementID;
-						/*{
-							ID = ElementID,
-							ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
-						};*/
+
 						model.ElementsDictionary.Add(e1.ID, e1);
 						model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 						elementCounter++;
@@ -400,7 +398,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				nodeCoordY = o_xsunol[6 * nNode + 1];
 				nodeCoordZ = o_xsunol[6 * nNode + 2];
 
-				model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ));
+				model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 				eswterikosNodeCounter++;
 			}
 			int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
@@ -453,16 +451,16 @@ namespace MGroup.Multiscale.SupportiveClasses
 				var e2 = new Shell8NonLinear(elementNodes, material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
 				e2.ID = ElementID;
 				e2.oVn_i = new double[][]
-				{ new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },};
+				{ 
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },};
 				e2.tk = Tk_vec;
-				
 				
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
@@ -636,12 +634,12 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 		}
 
-		public static Dictionary<INode, IList<IDofType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
+		public static Dictionary<Node, IList<IStructuralDofType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
 		{
 			//Origin : RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering()
 			//modifications: return type and nodes and dofs to be constrained
 
-			Dictionary<INode, IList<IDofType>> RigidBodyNodeConstraints = new Dictionary<INode, IList<IDofType>>();
+			Dictionary<Node, IList<IStructuralDofType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<IStructuralDofType>>();
 
 			// Perioxh renumbering initialization 
 			renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -653,14 +651,14 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int nodeID;
 
 			nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-			RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+			RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[nodeID], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
 
 			nodeID = renumbering.GetNewNodeNumbering(Topol_rve(hexa1 + 1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-			RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+			RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[nodeID], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
 			nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, hexa2 + 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-			RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+			RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[nodeID], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
 			//nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, 1, hexa3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
@@ -1000,7 +998,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 		}
 
-		/*public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, INode> boundaryNodes)
+		public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, INode> boundaryNodes)
 		{
 			//COPY apo FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS()
 			//modifications grammika elements kai artihmisi nodes pou afta xreiazontai
@@ -1043,7 +1041,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 						nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
 						nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 						nodeCounter++;
 					}
 				}
@@ -1059,7 +1057,6 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//	YoungModulus = E_disp,
 			//	PoissonRatio = ni_disp,
 			//};
-			Element e1;
 			int ElementID;
 			int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -1090,9 +1087,10 @@ namespace MGroup.Multiscale.SupportiveClasses
 							model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
 							model.NodesDictionary[globalNodeIDforlocalNode_i[7]]
 						};
-						e1 = new ContinuumElement3D(elementNodes,material1);//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+						var elementFactory = new ContinuumElement3DFactory(material1, commonDynamicProperties: null);
+						IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, elementNodes);
 						e1.ID = ElementID;
-						
+
 						//{
 						//	ID = ElementID,
 						//	ElementType = new ContinuumElement3D(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
@@ -1138,9 +1136,9 @@ namespace MGroup.Multiscale.SupportiveClasses
 				Dq[8, 3 * j + 2] = model.NodesDictionary[komvos].Y;
 				boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
 			}
-		}*/
+		}
 
-		/*public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, INode> boundaryNodes)
+		public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, INode> boundaryNodes)
 		{
 			//COPY apo FEMMeshBuilder.LinearHexaElementsOnlyRVEwithRenumbering_forMS()
 			//modifications boundary nodes mono ta peripheral 
@@ -1183,7 +1181,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 						nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
 						nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 						nodeCounter++;
 					}
 				}
@@ -1199,7 +1197,6 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//	YoungModulus = E_disp,
 			//	PoissonRatio = ni_disp,
 			//};
-			Element e1;
 			int ElementID;
 			int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -1218,17 +1215,28 @@ namespace MGroup.Multiscale.SupportiveClasses
 						globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 						globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 						globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						List<INode> elementNodes = new List<INode>()
+						{ model.NodesDictionary[globalNodeIDforlocalNode_i[0]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[1]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[2]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[3]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[4]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[5]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[7]]};
+						//IElementType e1 = new ContinuumElement3D(elementNodes, InterpolationHexa8.UniqueInstance, GaussLegendre3D.GetQuadratureWithOrder(orderXi: 3, orderEta: 3, orderZeta: 3), material1, CellType.Hexa8),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+						var elementFactory = new ContinuumElement3DFactory(material1, commonDynamicProperties: null);
+						IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, elementNodes);
+						//e1.ID = ElementID;
+						//{
+						//	ID = ElementID
+						//	ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+						//};
 
-						e1 = new Element()
-						{
-							ID = ElementID,
-							ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
-						};
-
-						for (int j = 0; j < 8; j++)
-						{
-							e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
-						}
+						//for (int j = 0; j < 8; j++)
+						//{
+						//	e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
+						//}
 						model.ElementsDictionary.Add(e1.ID, e1);
 						model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 						elementCounter++;
@@ -1267,16 +1275,6 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//}
 
 			int i_2 = 1;
-			for (int i1=1; i1<hexa1+2;i1++)
-			{
-				for (int i3 = 1; i3 < hexa3 + 2; i3++)
-				{
-					int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-					boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
-				}
-			}
-
-			i_2 = hexa2+1;
 			for (int i1 = 1; i1 < hexa1 + 2; i1++)
 			{
 				for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1286,7 +1284,17 @@ namespace MGroup.Multiscale.SupportiveClasses
 				}
 			}
 
-			int i_1 =  1;
+			i_2 = hexa2 + 1;
+			for (int i1 = 1; i1 < hexa1 + 2; i1++)
+			{
+				for (int i3 = 1; i3 < hexa3 + 2; i3++)
+				{
+					int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+					boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+				}
+			}
+
+			int i_1 = 1;
 			for (int i2 = 2; i2 < hexa2 + 1; i2++)
 			{
 				for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1296,7 +1304,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				}
 			}
 
-			i_1 = hexa1+1;
+			i_1 = hexa1 + 1;
 			for (int i2 = 2; i2 < hexa2 + 1; i2++)
 			{
 				for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1305,7 +1313,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 					boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
 				}
 			}
-		}*/
+		}
 
 		public static IEnumerable<IElementType> GetHostGroupForCohesiveElement(IElementType cohesive, rveMatrixParameters mp, Model model, string renumberingVectorPath)
 		{            
