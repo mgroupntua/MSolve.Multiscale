@@ -61,7 +61,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.HomogeneousRVEBuilderNonLin
 			var solver = solverFactory.BuildSolver(algebraicModel);
 
 			var problem = new ProblemStructural(model, algebraicModel, solver);
-			var loadControlAnalyzerBuilder = new LoadControlAnalyzer.Builder(model, algebraicModel, solver, problem, numIncrements: 2)
+			var loadControlAnalyzerBuilder = new LoadControlAnalyzer.Builder( algebraicModel, solver, problem, numIncrements: 2)
 			{
 				ResidualTolerance = 1E-3,
 				MaxIterationsPerIncrement = 1000,
@@ -69,7 +69,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.HomogeneousRVEBuilderNonLin
 			};
 			var loadControlAnalyzer = loadControlAnalyzerBuilder.Build();
 
-			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel,  problem, loadControlAnalyzer);
+			var staticAnalyzer = new StaticAnalyzer(algebraicModel,  problem, loadControlAnalyzer);
 
 			staticAnalyzer.Initialize();
 			staticAnalyzer.Solve();
