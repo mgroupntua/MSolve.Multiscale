@@ -1,7 +1,13 @@
-﻿using System;
+using System;
+
+//using ISAAR.MSolve.Materials;
+
+using MGroup.Constitutive.Structural.Cohesive;
 using MGroup.LinearAlgebra.Commons;
-using MGroup.Materials;
-using MGroup.Materials.Interfaces;
+//using MGroup.Materials;
+//using MGroup.Materials.Interfaces;
+using MGroup.MSolve.Constitutive;
+
 using Xunit;
 
 namespace MGroup.Multiscale.Tests
@@ -14,17 +20,17 @@ namespace MGroup.Multiscale.Tests
 			(double[][] stressHistory, double[][,] constitutiveMatrixHistory) = CheckStressStrainBonSlipMaterial();
 			int[] positions = new int[8] { 25, 50, 75, 100, 125, 150, 175, 200 };
 			var calculated_stresses = new double[positions.GetLength(0), 2];
-			var calculated_Const = new double[2*positions.GetLength(0), 2];
+			var calculated_Const = new double[2 * positions.GetLength(0), 2];
 
 			for (int i1 = 0; i1 < positions.GetLength(0); i1++)
 			{
 				calculated_stresses[i1, 0] = stressHistory[positions[i1] - 1][0];
 				calculated_stresses[i1, 1] = stressHistory[positions[i1] - 1][1];
 
-				calculated_Const[2 * (i1 ) + 0, 0] = constitutiveMatrixHistory[positions[i1] - 1][0, 0];
-				calculated_Const[2 * (i1 ) + 0, 1] = constitutiveMatrixHistory[positions[i1] - 1][0, 1];
-				calculated_Const[2 * (i1 ) + 1, 0] = constitutiveMatrixHistory[positions[i1] - 1][1, 0];
-				calculated_Const[2 * (i1 ) + 1, 1] = constitutiveMatrixHistory[positions[i1] - 1][1, 1];
+				calculated_Const[2 * (i1) + 0, 0] = constitutiveMatrixHistory[positions[i1] - 1][0, 0];
+				calculated_Const[2 * (i1) + 0, 1] = constitutiveMatrixHistory[positions[i1] - 1][0, 1];
+				calculated_Const[2 * (i1) + 1, 0] = constitutiveMatrixHistory[positions[i1] - 1][1, 0];
+				calculated_Const[2 * (i1) + 1, 1] = constitutiveMatrixHistory[positions[i1] - 1][1, 1];
 			}
 
 
@@ -56,14 +62,14 @@ namespace MGroup.Multiscale.Tests
 													  {32.500000000000028,-38.971143170299747},
 													  {-38.971143170299754,77.499999999999972},};
 
-			Assert.True(AreDisplacementsSame( calculated_stresses, stress_data));
+			Assert.True(AreDisplacementsSame(calculated_stresses, stress_data));
 			Assert.True(AreDisplacementsSame(calculated_Const, const_data));
 		}
 
-		public static (double[][],double[][,]) CheckStressStrainBonSlipMaterial()
+		public static (double[][], double[][,]) CheckStressStrainBonSlipMaterial()
 		{
 			//VectorExtensions.AssignTotalAffinityCount();
-			BondSlipCohMat material1 = new BondSlipCohMat(100, 10, 100, 100, new double[2], new double[2], 1e-10);
+			BondSlipMaterial material1 = new BondSlipMaterial(100, 10, 100, 100, new double[2], new double[2], 1e-10);
 			int loadsteps_2 = 120;
 			double[][] DeltaEhist = new double[2 * loadsteps_2][];
 			double phi_metakinhshs = ((double)30 / (double)360) * 2 * Math.PI;
@@ -78,30 +84,30 @@ namespace MGroup.Multiscale.Tests
 			{ Ehist[i1] = new double[3] { Ehist[i1 - 1][0] + DeltaEhist[i1][0], Ehist[i1 - 1][1] + DeltaEhist[i1][1], Ehist[i1 - 1][2] + DeltaEhist[i1][2] }; }
 
 
-			(double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(Ehist, material1);
+			(double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(Ehist, (ICohesiveZoneMaterial)material1);
 
 			return (stressHistory, constitutiveMatrixHistory);
 
 		}
 
 		public static bool AreDisplacementsSame(double[,] expectedValues,
-			double[,] computedValues)
+			double[,] computedValues, double tol=1E-8)
 		{
-			var comparer = new ValueComparer(1E-8);
-			for (int i1=0; i1<expectedValues.GetLength(0); i1++)
+			var comparer = new ValueComparer(tol);
+			for (int i1 = 0; i1 < expectedValues.GetLength(0); i1++)
 			{
 				for (int i2 = 0; i2 < expectedValues.GetLength(1); i2++)
 				{
-					if (!comparer.AreEqual(expectedValues[i1,i2], computedValues[i1,i2]))
+					if (!comparer.AreEqual(expectedValues[i1, i2], computedValues[i1, i2]))
 					{
 						return false;
 					}
 				}
-			}            
+			}
 			return true;
 		}
 
-		private static (double[][] stressHistory, double[][,] constitutiveMatrixHistory) StressStrainHistory(double[][] strainHistory, ICohesiveZoneMaterial3D testedMaterial)
+		private static (double[][] stressHistory, double[][,] constitutiveMatrixHistory) StressStrainHistory(double[][] strainHistory, ICohesiveZoneMaterial testedMaterial)
 		{
 			double[][] stressHistory = new double[strainHistory.GetLength(0)][];
 			double[][,] constitutiveMatrixHistory = new double[strainHistory.GetLength(0)][,];
@@ -112,10 +118,10 @@ namespace MGroup.Multiscale.Tests
 				{
 					Console.Write("breakPointIsHere");
 				}
-				testedMaterial.UpdateMaterial(strainHistory[l]);
-				testedMaterial.SaveState();
-				stressHistory[l] = new double[testedMaterial.Tractions.Length];
-				testedMaterial.Tractions.CopyTo(stressHistory[l], 0);
+				double[] stresses = testedMaterial.UpdateConstitutiveMatrixAndEvaluateResponse(strainHistory[l]);
+				testedMaterial.CreateState();
+				stressHistory[l] = new double[stresses.Length];
+				stresses.CopyTo(stressHistory[l], 0);
 				constitutiveMatrixHistory[l] = new double[testedMaterial.ConstitutiveMatrix.NumColumns, testedMaterial.ConstitutiveMatrix.NumRows];
 
 				for (int m = 0; m < testedMaterial.ConstitutiveMatrix.NumColumns; m++)

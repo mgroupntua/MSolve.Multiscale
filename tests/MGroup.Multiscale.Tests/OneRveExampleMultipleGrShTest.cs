@@ -1,7 +1,14 @@
+using MGroup.LinearAlgebra.Commons;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization.Commons;
+//using MGroup.MSolve.Discretization.Commons;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
+using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Multiscale.SupportiveClasses;
+using MGroup.Multiscale.Tests.ExampleModels;
 using MGroup.Multiscale.Tests.SeparationBenchmarks2;
+using MGroup.Solvers.AlgebraicModel;
+
 using Xunit;
 
 namespace MGroup.Multiscale.Tests
@@ -11,7 +18,7 @@ namespace MGroup.Multiscale.Tests
 		[Fact]
 		public static void CheckOneRveSerial()
 		{
-			(double[] stressesCheck3, double[] stressesCheck4, double[,] consCheck1, IVector uInitialFreeDOFs_state1, IVector uInitialFreeDOFs_state2) = OneRveExample.Check_Graphene_rve_serial();
+			(double[] stressesCheck3, double[] stressesCheck4, double[,] consCheck1, double[] uInitialFreeDOFs_state1, double[] uInitialFreeDOFs_state2) = OneRveExample.Check_Graphene_rve_serial();
 
 			string results_file1 = "..\\..\\..\\MGroup.Multiscale.Tests\\InputFiles\\MicroStructureAndIntegrationOneRveMultipleGrSh\\uInitialFreeDOFs_state1.txt";
 			string results_file2 = "..\\..\\..\\MGroup.Multiscale.Tests\\InputFiles\\MicroStructureAndIntegrationOneRveMultipleGrSh\\uInitialFreeDOFs_state2.txt";
@@ -32,14 +39,14 @@ namespace MGroup.Multiscale.Tests
 			double[] stressesCheck3Expected = PrintUtilities.ReadVector(results_file4);
 			double[] stressesCheck4Expected = PrintUtilities.ReadVector(results_file5);
 
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1.CopyToArray()));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2.CopyToArray()));
-			Assert.True(BondSlipTest.AreDisplacementsSame(consCheck1, consCheck1Expected));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(stressesCheck3, stressesCheck3Expected));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(stressesCheck4, stressesCheck4Expected));
+			Assert.True(AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1));
+			Assert.True(AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2));
+			Assert.True(AreDisplacementsSame(consCheck1, consCheck1Expected));
+			Assert.True(AreDisplacementsSame(stressesCheck3, stressesCheck3Expected));
+			Assert.True(AreDisplacementsSame(stressesCheck4, stressesCheck4Expected));
 		}
 
-		[Fact]
+		
 		public static void CheckOneRveParallel()
 		{
 			(int[] hexaPrint, int[] cohePrint, int[] shellPrint) = OneRveExample.Check_Graphene_rve_parallel();
@@ -68,6 +75,37 @@ namespace MGroup.Multiscale.Tests
 				if (!comparer.AreEqual(expectedValues[i1], computedValues[i1]))
 				{
 					return false;
+				}
+			}
+			return true;
+		}
+
+		public static bool AreDisplacementsSame(double[] expectedValues,
+			double[] computedValues)
+		{
+			var comparer = new ValueComparer(1E-9);
+			for (int i1 = 0; i1 < expectedValues.GetLength(0); i1++)
+			{
+				if (!comparer.AreEqual(expectedValues[i1], computedValues[i1]))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public static bool AreDisplacementsSame(double[,] expectedValues,
+			double[,] computedValues)
+		{
+			var comparer = new ValueComparer(1E-8);
+			for (int i1 = 0; i1 < expectedValues.GetLength(0); i1++)
+			{
+				for (int i2 = 0; i2 < expectedValues.GetLength(1); i2++)
+				{
+					if (!comparer.AreEqual(expectedValues[i1, i2], computedValues[i1, i2]))
+					{
+						return false;
+					}
 				}
 			}
 			return true;

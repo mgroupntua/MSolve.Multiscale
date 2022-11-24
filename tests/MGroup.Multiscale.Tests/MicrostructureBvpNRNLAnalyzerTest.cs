@@ -1,5 +1,10 @@
+using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Multiscale.SupportiveClasses;
+using MGroup.Multiscale.Tests.ExampleModels;
+using MGroup.Multiscale.Tests.FEMpartB;
+
 using Xunit;
 
 namespace MGroup.Multiscale.Tests
@@ -14,11 +19,11 @@ namespace MGroup.Multiscale.Tests
 			double[] displacements1sIncrement = PrintUtilities.ReadVector(results_file1);
 			double[] displacements2ndncrement = PrintUtilities.ReadVector(results_file2);
 
-			(IVector uInitialFreeDOFs_state1, IVector uInitialFreeDOFs_state2) = NRNLAnalyzerDevelopTest.SolveDisplLoadsExample();
+			(double[] uInitialFreeDOFs_state1, double[] uInitialFreeDOFs_state2) = NRNLAnalyzerDevelopExample.SolveDisplLoadsExample();
 
 
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1.CopyToArray()));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements2ndncrement, uInitialFreeDOFs_state2.CopyToArray()));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements2ndncrement, uInitialFreeDOFs_state2));
 		}
 	}
 }
