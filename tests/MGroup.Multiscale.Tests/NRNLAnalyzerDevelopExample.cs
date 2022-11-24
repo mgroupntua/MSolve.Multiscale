@@ -4,6 +4,7 @@ using MGroup.Constitutive.Structural.Continuum;
 using MGroup.Constitutive.Structural.Providers;
 using MGroup.FEM.Structural.Continuum;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.Constitutive;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
@@ -119,8 +120,8 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 			#endregion
 
 			#region save state and update structures and vectors for second increment
-
-			subdomainUpdaters.UpdateState();
+			var currentState = new GenericConstitutiveLawState(null, new (string, double)[0]);
+			subdomainUpdaters.UpdateState(currentState);
 			
 			// u (or uplusDu) initial 
 			uInitialFreeDOFDisplacementsPerSubdomain = childAnalyzer.GetConvergedSolutionVectorsOfFreeDofs().Copy();// ousiastika to u pou twra taftizetai me to uPlusuu

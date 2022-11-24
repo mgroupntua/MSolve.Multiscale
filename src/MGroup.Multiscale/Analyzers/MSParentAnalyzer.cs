@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.AnalysisWorkflow;
 using MGroup.MSolve.AnalysisWorkflow.Logging;
 using MGroup.MSolve.AnalysisWorkflow.Providers;
+using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.Solution;
@@ -41,7 +42,11 @@ namespace MiMsolve.multiScaleSupportiveClasses
 
         public IChildAnalyzer ChildAnalyzer { get; }
 
-        public void BuildMatrices()
+		public IGlobalVector CurrentAnalysisResult => throw new NotImplementedException();
+
+		public GenericAnalyzerState CurrentState { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+		public void BuildMatrices()
         {
             provider.CalculateMatrix();
 
@@ -75,5 +80,8 @@ namespace MiMsolve.multiScaleSupportiveClasses
             BuildMatrices(); //TODO: this should be called by the class that calls model.AssignLoads() and before it. 
             ChildAnalyzer.Solve();
         }
-    }
+
+		public GenericAnalyzerState CreateState() => throw new NotImplementedException();
+		IHaveState ICreateState.CreateState() => throw new NotImplementedException();
+	}
 }

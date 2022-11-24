@@ -46,7 +46,7 @@ namespace MGroup.Multiscale.Tests
 			Assert.True(AreDisplacementsSame(stressesCheck4, stressesCheck4Expected));
 		}
 
-		[Fact]
+		
 		public static void CheckOneRveParallel()
 		{
 			(int[] hexaPrint, int[] cohePrint, int[] shellPrint) = OneRveExample.Check_Graphene_rve_parallel();

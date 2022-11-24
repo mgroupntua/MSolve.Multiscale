@@ -19,6 +19,7 @@ using MGroup.MSolve.AnalysisWorkflow.Logging;
 using MiMsolve.intermediateCodeDevelopmentClasses;
 using MGroup.Constitutive.Structural.Providers;
 using System.Linq;
+using MGroup.MSolve.DataStructures;
 
 namespace MiMsolve.multiScaleSupportiveClasses
 {
@@ -53,9 +54,11 @@ namespace MiMsolve.multiScaleSupportiveClasses
         private IGlobalVector globalRhs;
         private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
         private readonly Dictionary<int, IAnalysisWorkflowLog[]> logs = new Dictionary<int, IAnalysisWorkflowLog[]>();
+		private const string CURRENTSOLUTION = "Current solution";
+		private GenericAnalyzerState currentState;
 
-        #region necessary logs for dispalcements and forces
-        public Dictionary<int, TotalLoadsDisplacementsPerIncrementLog> IncrementalLogs { get; }
+		#region necessary logs for dispalcements and forces
+		public Dictionary<int, TotalLoadsDisplacementsPerIncrementLog> IncrementalLogs { get; }
             = new Dictionary<int, TotalLoadsDisplacementsPerIncrementLog>();
 
         //public IReactionsLog ForcesLog { get; set; } 
@@ -370,8 +373,10 @@ namespace MiMsolve.multiScaleSupportiveClasses
 
         public void SaveMaterialState()
         {
-            subdomainUpdaters.UpdateState();
-        }
+			//subdomainUpdaters.UpdateState();
+			CreateState();
+			subdomainUpdaters.UpdateState(currentState);
+		}
 
         public IGlobalVector GetConvergedSolutionVectorsOfFreeDofs()
         {
@@ -428,6 +433,36 @@ namespace MiMsolve.multiScaleSupportiveClasses
             // and it is used when it is recalculated in CalculateInternalRHS......
         }
 
-        #endregion
-    }
+		GenericAnalyzerState CreateState()
+		{
+			currentState = new GenericAnalyzerState(this, new[]
+			{
+				(CURRENTSOLUTION, u),
+			});
+
+			return currentState;
+		}
+
+		IHaveState ICreateState.CreateState() => CreateState();
+		GenericAnalyzerState IAnalyzer.CreateState() => CreateState();
+
+		GenericAnalyzerState IAnalyzer.CurrentState
+		{
+			get => currentState;
+			set
+			{
+				currentState = value;
+				currentState.StateVectors[CURRENTSOLUTION].CheckForCompatibility = false;
+
+				u.CopyFrom(currentState.StateVectors[CURRENTSOLUTION]);
+
+				currentState.StateVectors[CURRENTSOLUTION].CheckForCompatibility = true;
+			}
+		}
+
+		public IGlobalVector CurrentAnalysisLinearSystemRhs { get => solver.LinearSystem.RhsVector; }
+		public IGlobalVector CurrentAnalysisResult { get => u; }
+
+		#endregion
+	}
 }
