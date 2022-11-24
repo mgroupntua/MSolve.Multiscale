@@ -357,10 +357,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
 
 			subdomainUpdaters.UpdateState(currentState);
-            //var subdomainUpdaters = new Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions>(1); 
-            //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values){subdomainUpdaters.Add(subdomain.ID, new NonLinearSubdomainUpdaterWithInitialConditions(subdomain)); //v2.3}
-            //foreach (var subdomainUpdater in subdomainUpdaters.Values){subdomainUpdater.UpdateState();}
-
+            
             
             return currentState;
 

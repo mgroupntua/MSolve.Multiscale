@@ -414,9 +414,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 																						   //klp san to bondslip coesive materials kai ta eprepe na perilamvanei tou rve oles tis state variables dld kai ta materials kai tis free metakinhseis twn elements kai pitano contact klp kai ta uprescribed
 
 			subdomainUpdaters.UpdateState(currentState);
-            //var subdomainUpdaters = new Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions>(1); 
-            //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values){subdomainUpdaters.Add(subdomain.ID, new NonLinearSubdomainUpdaterWithInitialConditions(subdomain)); //v2.3}
-            //foreach (var subdomainUpdater in subdomainUpdaters.Values){subdomainUpdater.UpdateState();}
+            
 
                
 

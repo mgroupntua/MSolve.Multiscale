@@ -1,4 +1,4 @@
-﻿using MGroup.Constitutive.Structural;
+using MGroup.Constitutive.Structural;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
@@ -28,9 +28,6 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         private GlobalVector[] KfpDqVectors;
         private double[][] KppDqVectors;
-        //ISubdomainFreeDofOrdering dofOrdering;
-        //DofTable FreeDofs;
-        //v2.1 Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary;
         IScaleTransitions scaleTransitions;
         private SubdomainVectorAssembler vectorAssembler;
         private ISubdomainFreeDofOrdering subdomainFreeDofOrdering;
@@ -41,7 +38,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
         private GlobalAlgebraicModel<TMatrix> globalAlgebraicModel;
         private ISolver solver;
 
-        //int currentSubdomainID;
+       
 
 
         public (IGlobalVector[], double[][]) UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultipleObje(Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions,
@@ -59,8 +56,8 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
             subdomainFreeDofOrdering = globalAlgebraicModel.SubdomainFreeDofOrdering;
 
-            //IReadOnlyDictionary<int, ILinearSystem> linearSystems = solver.LinearSystems; //v2.3
-
+            
+			//two following commented out lines refer to multisubdomain model
             //Dictionary<int, double[][]> KfpDqSubdomains = new Dictionary<int, double[][]>(model.SubdomainsDictionary.Count);
             //Dictionary<int, double[][]> KppDqVectorsSubdomains = new Dictionary<int, double[][]>(model.SubdomainsDictionary.Count);
             this.boundaryElements = boundaryElements;
@@ -97,135 +94,12 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             return (KfpDqVectors, KppDqVectors);
         }
 
-        //public void UpdateVectors(IElementType element, IMatrix ElementK)
-        //{
-        //    //ISubdomain subdomain = element.Subdomain;
-        //    if (boundaryElements.ContainsKey(element.ID))//COPIED From UpdateSubdomainKffAndCalculateKfpDqAndKppDqp (prosoxh boundary elements Dictionary diathetoun kai to model kai to subdomain kai einai diaforetika edw exei diorthwthei
-        //    {
-        //        //ADDED these lines from another part of UpdateSubdomainKffAndCalculateKfpDqAndKppDqp
-        //        var isEmbeddedElement = element is IEmbeddedElement;
-        //        var elementDOFTypes = element.DofEnumerator.GetDofTypesForMatrixAssembly(element);
-        //        var matrixAssemblyNodes = element.DofEnumerator.GetNodesForMatrixAssembly(element);
-
-
-        //        #region KfpDq Multiplication
-        //        int iElementMatrixRow = 0;
-        //        for (int i = 0; i < elementDOFTypes.Count; i++)
-        //        {
-        //            INode nodeRow = matrixAssemblyNodes[i];
-        //            int dofTypeRowToNumber = -1; //v2.6
-        //            foreach (IDofType dofTypeRow in elementDOFTypes[i])
-        //            {
-        //                dofTypeRowToNumber++;
-        //                int dofIdINode = ActiveDofs.GetIdOfDof(elementDOFTypes[i][dofTypeRowToNumber]);
-        //                bool isFree = subdomainFreeDofOrdering.FreeDofs.TryGetValue(matrixAssemblyNodes[i].ID, dofIdINode, out int dofRow); //v2.6
-        //                //int dofRow = nodalDOFsDictionary.ContainsKey(nodeRow.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeRow.ID][dofTypeRow];
-        //                if (isFree) // TODOGerasimos edw pithanws thelei kai elegxo alliws an den ta exoume afhsei constrained ta p kai einai elefthera px me to an anhkoun sto baoundary nodes
-        //                {                    // alla etsi einai oti akrivws thewritai kai sto assembly tou Kff opote ok
-        //                    int iElementMatrixColumn = 0;
-        //                    for (int j = 0; j < elementDOFTypes.Count; j++)
-        //                    {
-        //                        INode nodeColumn = matrixAssemblyNodes[j];
-        //                        //foreach (DOFType dofTypeColumn in elementDOFTypes[j])
-        //                        //{
-        //                        //    int dofColumn = nodalDOFsDictionary.ContainsKey(nodeColumn.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeColumn.ID][dofTypeColumn];
-        //                        //    if (dofColumn != -1)
-        //                        //    {
-        //                        //        int height = dofRow - dofColumn;
-        //                        //        if (height >= 0)
-        //                        //            K.Data[K.RowIndex[dofRow] + height] += ElementK[iElementMatrixRow, iElementMatrixColumn];
-        //                        //    }
-        //                        //    iElementMatrixColumn++;
-        //                        //}
-        //                        int nodalDofsNumber = elementDOFTypes[j].Count; //TODOGerasimos elegxos oti edw oi ginetai prosvash apo 0:1:megethos 
-        //                        if (boundaryNodes.ContainsKey(nodeColumn.ID))
-        //                        {
-        //                            double[] element_Kfp_triplette = new double[nodalDofsNumber]; //nodalDofsNumber: giati oxi scaleTransitions.PrescribedDofsPerNode()? Dioti tou ta pairname ola(triplette) kai dialegei to 
-        //                            for (int j1 = 0; j1 < nodalDofsNumber; j1++)                  //scaleTransitions.MicroToMacroTransition ti tha xrhsimopoihsei apo afta analoga pws einai implemented
-        //                            {
-        //                                element_Kfp_triplette[j1] = ElementK[iElementMatrixRow, iElementMatrixColumn + j1];
-        //                            }
-
-        //                            double[] contribution = scaleTransitions.MicroToMacroTransition(nodeColumn, element_Kfp_triplette);
-        //                            for (int j2 = 0; j2 < contribution.GetLength(0); j2++)
-        //                            {
-        //                                //TODO replace that maybe
-        //                                KfpDqVectors[j2][dofRow] += contribution[j2]; // TODO diorthothike
-        //                                //TODO replace that 
-        //                            }
-
-        //                        }
-        //                        iElementMatrixColumn += nodalDofsNumber;
-
-        //                    }
-        //                }
-        //                iElementMatrixRow++;
-        //            }
-        //        }
-        //        #endregion
-
-        //        #region KppDq Multiplications
-        //        iElementMatrixRow = 0;
-        //        for (int i = 0; i < elementDOFTypes.Count; i++)
-        //        {
-        //            INode nodeRow = matrixAssemblyNodes[i];
-        //            if (boundaryNodes.ContainsKey(nodeRow.ID))
-        //            {
-        //                for (int i1 = 0; i1 < scaleTransitions.PrescribedDofsPerNode(); i1++)
-        //                {
-        //                    int dofrow_p = scaleTransitions.PrescribedDofsPerNode() * (boundaryNodesOrder[nodeRow.ID] - 1) + i1;
-        //                    int iElementMatrixColumn = 0;
-        //                    for (int j = 0; j < elementDOFTypes.Count; j++)
-        //                    {
-        //                        INode nodeColumn = matrixAssemblyNodes[j];
-        //                        //
-        //                        //foreach (DOFType dofTypeColumn in elementDOFTypes[j])
-        //                        //{
-        //                        //    int dofColumn = nodalDOFsDictionary.ContainsKey(nodeColumn.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeColumn.ID][dofTypeColumn];
-        //                        //    if (dofColumn != -1)// TODOGerasimos edw pithanws thelei kai elegxo alliws an den ta exoume afhsei constrained ta p kai einai elefthera px me to an anhkoun sto baoundary nodes
-        //                        //    {                   // alla etsi einai oti akrivws thewritai kai sto assembly tou Kff opote ok
-
-        //                        //        for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
-        //                        //        {
-        //                        //            f3_vectors[i2][dofrow_p] += ElementK[iElementMatrixRow + i1, iElementMatrixColumn] * f2_vectors[i2][dofColumn]; /////
-        //                        //        }
-
-        //                        //    }
-        //                        //    iElementMatrixColumn++;
-        //                        //}
-        //                        //
-        //                        int nodalDofsNumber = elementDOFTypes[j].Count;
-        //                        if (boundaryNodes.ContainsKey(nodeColumn.ID))
-        //                        {
-        //                            double[] element_Kpp_triplette = new double[scaleTransitions.PrescribedDofsPerNode()];
-        //                            for (int j2 = 0; j2 < scaleTransitions.PrescribedDofsPerNode(); j2++)
-        //                            {
-        //                                element_Kpp_triplette[j2] = ElementK[iElementMatrixRow + i1, iElementMatrixColumn + j2]; // mallon iElementMatrixRow + i1
-        //                            }
-        //                            double[] contribution = scaleTransitions.MicroToMacroTransition(nodeColumn, element_Kpp_triplette);
-        //                            for (int j1 = 0; j1 < contribution.GetLength(0); j1++)
-        //                            {
-        //                                KppDqVectors[j1][dofrow_p] += contribution[j1];
-        //                            }
-        //                        }
-        //                        iElementMatrixColumn += nodalDofsNumber;
-
-
-
-        //                    }
-
-        //                }
-        //            }
-        //            iElementMatrixRow += elementDOFTypes[i].Count;
-        //        }
-        //        #endregion
-        //    }
-        //}
+        
 
         public void UpdateVectors(IElementType element, IMatrix ElementK)
         {
             //ISubdomain subdomain = element.Subdomain;
-            if (boundaryElements.ContainsKey(element.ID))//COPIED From UpdateSubdomainKffAndCalculateKfpDqAndKppDqp (prosoxh boundary elements Dictionary diathetoun kai to model kai to subdomain kai einai diaforetika edw exei diorthwthei
+            if (boundaryElements.ContainsKey(element.ID))
             {
                 //ADDED these lines from another part of UpdateSubdomainKffAndCalculateKfpDqAndKppDqp
                 var isEmbeddedElement = element is IEmbeddedElement;
@@ -255,18 +129,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
                             for (int j = 0; j < elementDOFTypes.Count; j++)
                             {
                                 INode nodeColumn = matrixAssemblyNodes[j];
-                                //foreach (DOFType dofTypeColumn in elementDOFTypes[j])
-                                //{
-                                //    int dofColumn = nodalDOFsDictionary.ContainsKey(nodeColumn.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeColumn.ID][dofTypeColumn];
-                                //    if (dofColumn != -1)
-                                //    {
-                                //        int height = dofRow - dofColumn;
-                                //        if (height >= 0)
-                                //            K.Data[K.RowIndex[dofRow] + height] += ElementK[iElementMatrixRow, iElementMatrixColumn];
-                                //    }
-                                //    iElementMatrixColumn++;
-                                //}
-                                int nodalDofsNumber = elementDOFTypes[j].Count; //TODOGerasimos elegxos oti edw oi ginetai prosvash apo 0:1:megethos 
+                                 int nodalDofsNumber = elementDOFTypes[j].Count; //TODOGerasimos elegxos oti edw oi ginetai prosvash apo 0:1:megethos 
                                 if (boundaryNodes.ContainsKey(nodeColumn.ID))
                                 {
                                     double[] element_Kfp_triplette = new double[nodalDofsNumber]; //nodalDofsNumber: giati oxi scaleTransitions.PrescribedDofsPerNode()? Dioti tou ta pairname ola(triplette) kai dialegei to 
@@ -278,10 +141,9 @@ namespace MGroup.MSolve.MultiscaleAnalysis
                                     double[] contribution = scaleTransitions.MicroToMacroTransition(nodeColumn, element_Kfp_triplette);
                                     for (int j2 = 0; j2 < contribution.GetLength(0); j2++)
                                     {
-                                        //TODO replace that maybe
-                                        //KfpDqVectors[j2][dofRow] += contribution[j2]; // TODO diorthothike
-                                        elementKfpDqvecs[j2][iElementMatrixRow] += contribution[j2]; // TODO diorthothike
-                                        //TODO replace that 
+                                        
+                                        elementKfpDqvecs[j2][iElementMatrixRow] += contribution[j2]; 
+                                        
                                     }
 
                                 }
@@ -321,22 +183,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
                             for (int j = 0; j < elementDOFTypes.Count; j++)
                             {
                                 INode nodeColumn = matrixAssemblyNodes[j];
-                                //
-                                //foreach (DOFType dofTypeColumn in elementDOFTypes[j])
-                                //{
-                                //    int dofColumn = nodalDOFsDictionary.ContainsKey(nodeColumn.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeColumn.ID][dofTypeColumn];
-                                //    if (dofColumn != -1)// TODOGerasimos edw pithanws thelei kai elegxo alliws an den ta exoume afhsei constrained ta p kai einai elefthera px me to an anhkoun sto baoundary nodes
-                                //    {                   // alla etsi einai oti akrivws thewritai kai sto assembly tou Kff opote ok
-
-                                //        for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
-                                //        {
-                                //            f3_vectors[i2][dofrow_p] += ElementK[iElementMatrixRow + i1, iElementMatrixColumn] * f2_vectors[i2][dofColumn]; /////
-                                //        }
-
-                                //    }
-                                //    iElementMatrixColumn++;
-                                //}
-                                //
+                                
                                 int nodalDofsNumber = elementDOFTypes[j].Count;
                                 if (boundaryNodes.ContainsKey(nodeColumn.ID))
                                 {

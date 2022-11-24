@@ -121,12 +121,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         private void InitializeFreeAndPrescribedDofsInitialDisplacementVectors()
         {
-            uInitialFreeDOFDisplacementsPerSubdomain = globalAlgebraicModel.CreateZeroVector(); //new Dictionary<int, IVector>();
-																								//uInitialFreeDOFDisplacementsPerSubdomain = new Dictionary<int, IVector>();
-																								//foreach(Subdomain subdomain in model.SubdomainsDictionary.Values)
-																								//{
-																								//    uInitialFreeDOFDisplacementsPerSubdomain.Add(subdomain.ID, Vector.CreateZero(subdomain.FreeDofOrdering.NumFreeDofs));// prosoxh sto Id twn subdomain
-																								//}
+            uInitialFreeDOFDisplacementsPerSubdomain = globalAlgebraicModel.CreateZeroVector(); 
 			double[] smallStrainVec = new double[6];
 			initialConvergedBoundaryDisplacements = new Dictionary<int, Dictionary<IDofType, double>>();
             foreach (Node boundaryNode in boundaryNodes.Values)
@@ -216,7 +211,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             }
             #endregion
                      
-            //var linearSystems = CreateNecessaryLinearSystems(model);    // OPOU pairnei rhs apo subdomainForces       
+            //var linearSystems = CreateNecessaryLinearSystems(model);    // dont delete comment OPOU pairnei rhs apo subdomainForces       
             //var solver = GetAppropriateSolver(linearSystems);
 
             
@@ -328,9 +323,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 			currentState = new GenericConstitutiveLawState(this, new (string, double)[0]); // TODO: an xreiazottan pote tetoia ulopoihsh tote tha itan to tupou  {(HARDENING_X, alpha[0]),(HARDENING_Y, alpha[1])}
 																						   //klp san to bondslip coesive materials kai ta eprepe na perilamvanei tou rve oles tis state variables dld kai ta materials kai tis free metakinhseis twn elements kai pitano contact klp kai ta uprescribed
 			subdomainUpdaters.UpdateState(currentState);
-            //var subdomainUpdaters = new Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions>(1); 
-            //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values){subdomainUpdaters.Add(subdomain.ID, new NonLinearSubdomainUpdaterWithInitialConditions(subdomain)); //v2.3}
-            //foreach (var subdomainUpdater in subdomainUpdaters.Values){subdomainUpdater.UpdateState();}
+            
 
                 
 
@@ -539,11 +532,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
 
     }
-	//Microstructure3DevelopMultipleSubdomainsUseBaseSimuRandObjSmallStrains3D
-	//Origin  Microstructure3DevelopMultipleSubdomainsUseBaseSimuRandObj
-	//modifications apo defgrad egine smallstrains2d me odhgo Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrains2D se sxesh me to Microstructure3DevelopMultipleSubdomainsUseBase.cs
-
-
+	
 
 
 }

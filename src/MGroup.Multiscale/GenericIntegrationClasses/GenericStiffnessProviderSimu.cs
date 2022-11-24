@@ -1,4 +1,4 @@
-﻿using MGroup.LinearAlgebra.Matrices;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Providers;
 using MGroup.MSolve.MultiscaleAnalysis;
@@ -20,7 +20,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             this.host = host;
         }
 
-        public IMatrix Matrix(IElementType element) //TODOGer IMatrix2D will be changed to Matrix etc.
+        public IMatrix Matrix(IElementType element) 
         {
             var elementMatrix = element.PhysicsMatrix();
             host.UpdateVectors(element, elementMatrix);
@@ -33,16 +33,3 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
 
 
-
-
-
-    
-        //#region IElementMatrixProvider Members
-
-        //public IMatrix2D Matrix(IElement element)
-        //{
-        //    return element.IElementType.StiffnessMatrix(element);
-        //}
-
-        //#endregion
-    

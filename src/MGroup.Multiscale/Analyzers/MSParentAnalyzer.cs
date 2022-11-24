@@ -54,8 +54,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
 
         public IGlobalVector GetOtherRhsComponents(IGlobalVector currentSolution)
         {
-            //TODO: use a ZeroVector class that avoid doing useless operations or refactor this method. E.g. let this method 
-            // alter the child analyzer's rhs vector, instead of the opposite (which is currently done).
+            
             return algebraicModel.CreateZeroVector();
         }
 
@@ -65,11 +64,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
             if (ChildAnalyzer == null) throw new InvalidOperationException("Static analyzer must contain an embedded analyzer.");
             
             
-            //foreach (ILinearSystem linearSystem in linearSystems.Values)
-            //{
-            //    linearSystem.RhsVector = linearSystem.Subdomain.Forces;
-            //}
-            //TODO:Ger subdomain.Forces doesn't exist anymore.
+           
 
             ChildAnalyzer.Initialize(isFirstAnalysis);
         }

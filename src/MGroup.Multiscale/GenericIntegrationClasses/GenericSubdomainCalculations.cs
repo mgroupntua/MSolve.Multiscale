@@ -113,9 +113,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             int nIncrement, int totalIncrements, IAlgebraicModel algebraicModel )
         {
             
-            //TODOGerasimos: 1) Subdomain2 einai h upo kataskevh subdomain.cs ths Marias gia na mporoume na anaferthoume sthn methodo ths CalculateElementNodalDisplacements(..,..). 
-            // Otan parei telikh morfh tha taftizetai me thn Subdomain.cs
-            // 2)IVector solution, IVector dSolution EINAI AFTA ME TA OPOIA kaloume thn GetRHSFromSolution sthn 213 tou NRNLAnalyzer
+            
             double[] FppReactionVector;
             Dictionary<int, int> boundaryNodesOrder = GetNodesOrderInDictionary(boundaryNodes);
             FppReactionVector = new double[boundaryNodesOrder.Count * scaleTransitions.PrescribedDofsPerNode()]; // h allliws subdomain.Forces.GetLength(0)

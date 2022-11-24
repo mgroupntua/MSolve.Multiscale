@@ -1,56 +1,42 @@
-using System.Collections.Generic;
-using System.Linq;
-//using MGroup.Analyzers;
-//using MGroup.Analyzers.NonLinear;
-using MGroup.Constitutive.Structural;
-using MGroup.Constitutive.Structural.BoundaryConditions;
-using MGroup.Constitutive.Structural.Continuum;
-using MGroup.FEM.Structural.Continuum;
-using MGroup.LinearAlgebra.Matrices;
-//using MGroup.FEM.Elements;
-//using MGroup.FEM.Entities;
-//using MGroup.Materials.Interfaces;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.Dofs;
-using MGroup.MSolve.Discretization.Entities;
-using MGroup.MSolve.MultiscaleAnalysis;
-using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
-//using MGroup.MSolve.Discretization.FreedomDegrees;
-//using MGroup.MSolve.Discretization.Integration.Quadratures;
-//using MGroup.MSolve.Discretization.Loads;
-//using MGroup.MSolve.Logging;
-using MGroup.MSolve.Numerics.Integration.Quadratures;
-using MGroup.MSolve.Numerics.Interpolation;
-using MGroup.MSolve.Solution;
-//using MGroup.Multiscale.Interfaces;
-using MGroup.NumericalAnalyzers;
-using MGroup.NumericalAnalyzers.Discretization.NonLinear;
-using MGroup.NumericalAnalyzers.Logging;
-//using MGroup.Problems;
-using MGroup.Solvers;
-using MGroup.Solvers.Direct;
-
-using MiMsolve.SolutionStrategies;
-
 namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 {
-	public static class IntegrationElasticCantileverBenchmark //checked
-	{
-		//checked: apotelesmata C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\APOTELESMATA_MS_hexa8_cantilever_nea\IntegrationElasticCantileverBenchmark RunExample
+	using System.Collections.Generic;
 
-		//Origin opou htan checked branch example/ms_development_nl_elements_merge
-		//modifications: egine v2
+	using MGroup.Constitutive.Structural;
+	using MGroup.Constitutive.Structural.BoundaryConditions;
+	using MGroup.Constitutive.Structural.Continuum;
+	using MGroup.FEM.Structural.Continuum;
+	using MGroup.LinearAlgebra.Matrices;
+
+	using MGroup.MSolve.Discretization;
+	using MGroup.MSolve.Discretization.Dofs;
+	using MGroup.MSolve.Discretization.Entities;
+	using MGroup.MSolve.MultiscaleAnalysis;
+	using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
+
+	using MGroup.MSolve.Numerics.Integration.Quadratures;
+	using MGroup.MSolve.Numerics.Interpolation;
+	using MGroup.MSolve.Solution;
+	//using MGroup.Multiscale.Interfaces;
+	using MGroup.NumericalAnalyzers;
+	using MGroup.NumericalAnalyzers.Discretization.NonLinear;
+	using MGroup.NumericalAnalyzers.Logging;
+	//using MGroup.Problems;
+	using MGroup.Solvers.Direct;
+
+	using MiMsolve.SolutionStrategies;
+
+	public static class IntegrationElasticCantileverBenchmark 
+	{
+		
 		public static TotalDisplacementsPerIterationLog RunExample()
 		{
-			//VectorExtensions.AssignTotalAffinityCount();
+			
 			Model model = new Model();
 			int subdomainID = 1; model.SubdomainsDictionary.Add(subdomainID, new Subdomain(subdomainID));
 			HexaCantileverBuilder_copyMS_222(model, 0.00219881744271988174427);
 
-			//model.ConnectDataStructures();
-
-			//var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
-			//linearSystems[subdomainID] = new SkylineLinearSystem(subdomainID, model.Subdomains[0].Forces);
+			
 
 			// Solver
 			var solverBuilder = new SkylineSolver.Factory();
@@ -60,17 +46,12 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 			// Problem type
 			var provider = new ProblemStructural(model, algebraicModel, solver);
 
-			//var solver = new SolverSkyline(linearSystems[subdomainID]);
-			//var linearSystemsArray = new[] { linearSystems[subdomainID] };
-
-			//var subdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.Subdomains[0]) };
-			//var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
+			
 
 			var increments = 2;
 			var childAnalyzerBuilder = new LoadControlAnalyzer.Builder(algebraicModel, solver, provider, increments);
 			childAnalyzerBuilder.MaxIterationsPerIncrement = 100;
 			childAnalyzerBuilder.NumIterationsForMatrixRebuild = 1;
-			//childAnalyzerBuilder.SubdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.SubdomainsDictionary[subdomainID]) }; // This is the default
 			LoadControlAnalyzer childAnalyzer = childAnalyzerBuilder.Build();
 			var parentAnalyzer = new StaticAnalyzer(algebraicModel,  provider, childAnalyzer);
 			var watchDofs = new Dictionary<int, int[]>();
@@ -150,10 +131,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 					ID = nElement + 1,
 					//ElementType = new ContinuumElement3DNonLinearDefGrad(material1, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
 				};
-				//for (int j = 0; j < 8; j++)
-				//{
-				//	e1.NodesDictionary.Add(elementData[nElement, j + 1], model.NodesDictionary[elementData[nElement, j + 1]]);
-				//}
+				
 				model.ElementsDictionary.Add(e1.ID, e1);
 				model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 			}
@@ -165,9 +143,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 				boundaryConditions.Add(new NodalDisplacement(model.NodesDictionary[k], StructuralDof.TranslationX, 0));
 				boundaryConditions.Add(new NodalDisplacement(model.NodesDictionary[k], StructuralDof.TranslationY, 0));
 				boundaryConditions.Add(new NodalDisplacement(model.NodesDictionary[k], StructuralDof.TranslationZ, 0));
-				//model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
-				//model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
-				//model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationZ });
+				
 			}
 
 			// fortish korufhs
@@ -176,13 +152,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 			for (int k = 17; k < 21; k++)
 			{
 				nodalLoads.Add(new NodalLoad(model.NodesDictionary[k], StructuralDof.TranslationX, 1 * load_value));
-				//load1 = new Load()
-				//{
-				//	Node = model.NodesDictionary[k],
-				//	DOF = StructuralDof.TranslationX,
-				//	Amount = 1 * load_value
-				//};
-				//model.Loads.Add(load1);
+				
 			}
 			var boundaryConditionsAndNodalLoads = new StructuralBoundaryConditionSet(boundaryConditions, nodalLoads);
 			model.BoundaryConditions.Add(boundaryConditionsAndNodalLoads);

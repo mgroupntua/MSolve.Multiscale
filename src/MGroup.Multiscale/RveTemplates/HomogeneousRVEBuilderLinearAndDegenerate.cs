@@ -84,11 +84,5 @@ namespace MGroup.Multiscale
 
 
 	}
-	// Origin : HomogeneousRVEBuilderCheck27HexaDegenerateAndLinear
-	// allagh: ta peripheral boundary nodes
-
-	//TODOGerasimos gia na ta krataei mesa kai na kanei build model oses fores tou zhththei
-	// omoiws na ginei kai to RVE me graphene sheets 
-	// string renumbering_vector_path; 
-	// int subdiscr1;
+	
 }
