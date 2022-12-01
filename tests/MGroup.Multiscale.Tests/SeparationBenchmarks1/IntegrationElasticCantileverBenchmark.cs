@@ -1,64 +1,73 @@
-﻿using System.Collections.Generic;
-using MGroup.Analyzers;
-using MGroup.Analyzers.NonLinear;
-using MGroup.FEM.Elements;
-using MGroup.FEM.Entities;
-using MGroup.Materials.Interfaces;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Integration.Quadratures;
-using MGroup.MSolve.Discretization.Loads;
-using MGroup.MSolve.Logging;
-using MGroup.Multiscale.Interfaces;
-using MGroup.Problems;
-using MGroup.Solvers;
-using MGroup.Solvers.Direct;
-
 namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 {
-	public static class IntegrationElasticCantileverBenchmark //checked
+	using System.Collections.Generic;
+
+	using MGroup.Constitutive.Structural;
+	using MGroup.Constitutive.Structural.BoundaryConditions;
+	using MGroup.Constitutive.Structural.Continuum;
+	using MGroup.FEM.Structural.Continuum;
+	using MGroup.LinearAlgebra.Matrices;
+
+	using MGroup.MSolve.Discretization;
+	using MGroup.MSolve.Discretization.Dofs;
+	using MGroup.MSolve.Discretization.Entities;
+	using MGroup.MSolve.MultiscaleAnalysis;
+	using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
+
+	using MGroup.MSolve.Numerics.Integration.Quadratures;
+	using MGroup.MSolve.Numerics.Interpolation;
+	using MGroup.MSolve.Solution;
+	//using MGroup.Multiscale.Interfaces;
+	using MGroup.NumericalAnalyzers;
+	using MGroup.NumericalAnalyzers.Discretization.NonLinear;
+	using MGroup.NumericalAnalyzers.Logging;
+	//using MGroup.Problems;
+	using MGroup.Solvers.Direct;
+
+	using MiMsolve.SolutionStrategies;
+
+	public static class IntegrationElasticCantileverBenchmark 
 	{
-		//checked: apotelesmata C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\APOTELESMATA_MS_hexa8_cantilever_nea\IntegrationElasticCantileverBenchmark RunExample
 		
-		//Origin opou htan checked branch example/ms_development_nl_elements_merge
-		//modifications: egine v2
 		public static TotalDisplacementsPerIterationLog RunExample()
 		{
-			//VectorExtensions.AssignTotalAffinityCount();
+			
 			Model model = new Model();
-			int subdomainID = 1;  model.SubdomainsDictionary.Add(subdomainID, new Subdomain(subdomainID));
+			int subdomainID = 1; model.SubdomainsDictionary.Add(subdomainID, new Subdomain(subdomainID));
 			HexaCantileverBuilder_copyMS_222(model, 0.00219881744271988174427);
 
-			//model.ConnectDataStructures();
-
-			//var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
-			//linearSystems[subdomainID] = new SkylineLinearSystem(subdomainID, model.Subdomains[0].Forces);
+			
 
 			// Solver
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
+			var solverBuilder = new SkylineSolver.Factory();
+			var algebraicModel = solverBuilder.BuildAlgebraicModel(model);
+			ISolver solver = solverBuilder.BuildSolver(algebraicModel);
 
 			// Problem type
-			var provider = new ProblemStructural(model, solver);
+			var provider = new ProblemStructural(model, algebraicModel);
 
-			//var solver = new SolverSkyline(linearSystems[subdomainID]);
-			//var linearSystemsArray = new[] { linearSystems[subdomainID] };
-
-			//var subdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.Subdomains[0]) };
-			//var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
+			
 
 			var increments = 2;
-			var childAnalyzerBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, increments);
+			var childAnalyzerBuilder = new LoadControlAnalyzer.Builder(algebraicModel, solver, provider, increments);
 			childAnalyzerBuilder.MaxIterationsPerIncrement = 100;
 			childAnalyzerBuilder.NumIterationsForMatrixRebuild = 1;
-			//childAnalyzerBuilder.SubdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.SubdomainsDictionary[subdomainID]) }; // This is the default
 			LoadControlAnalyzer childAnalyzer = childAnalyzerBuilder.Build();
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+			var parentAnalyzer = new StaticAnalyzer(algebraicModel,  provider, childAnalyzer);
 			var watchDofs = new Dictionary<int, int[]>();
 			watchDofs.Add(subdomainID, new int[5] { 0, 11, 23, 35, 47 });
-			var log1 = new TotalDisplacementsPerIterationLog(watchDofs);
+			var log1 = new TotalDisplacementsPerIterationLog(
+				new List<(INode node, IDofType dof)>()
+				{
+					(model.NodesDictionary[5], StructuralDof.TranslationX),
+					(model.NodesDictionary[8], StructuralDof.TranslationZ),
+					(model.NodesDictionary[12], StructuralDof.TranslationZ),
+					(model.NodesDictionary[16], StructuralDof.TranslationZ),
+					(model.NodesDictionary[20], StructuralDof.TranslationZ)
+				}, algebraicModel
+			);
 			childAnalyzer.TotalDisplacementsPerIterationLog = log1;
-		   
+
 			parentAnalyzer.Initialize();
 			parentAnalyzer.Solve();
 
@@ -72,8 +81,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 
 			IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderNonLinear();
 
-			IContinuumMaterial3DDefGrad material1 = new MicrostructureDefGrad3D(homogeneousRveBuilder1,
-				m => (new SkylineSolver.Builder()).BuildSolver(m), false, 1);
+			IContinuumMaterial3DDefGrad material1 = new MicrostructureDefGrad3D<SkylineMatrix>(homogeneousRveBuilder1, false, 1, new SkylineSolverPrefernce());
 
 			double[,] nodeData = new double[,] { {-0.250000,-0.250000,-1.000000},
 			{0.250000,-0.250000,-1.000000},
@@ -104,48 +112,50 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 			// orismos shmeiwn
 			for (int nNode = 0; nNode < nodeData.GetLength(0); nNode++)
 			{
-				model.NodesDictionary.Add(nNode + 1, new Node(id: nNode + 1, x: nodeData[nNode, 0], y:  nodeData[nNode, 1], z: nodeData[nNode, 2] ));
+				model.NodesDictionary.Add(nNode + 1, new Node(id: nNode + 1, x: nodeData[nNode, 0], y: nodeData[nNode, 1], z: nodeData[nNode, 2]));
 
 			}
 
 			// orismos elements 
-			Element e1;
+			IElementType e1;
 			int subdomainID = 1;
 			for (int nElement = 0; nElement < elementData.GetLength(0); nElement++)
 			{
-				e1 = new Element()
-				{
-					ID = nElement + 1,
-					ElementType = new Hexa8NonLinearDefGrad(material1, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
-				};
+				List<Node> elementNodes = new List<Node>();
 				for (int j = 0; j < 8; j++)
 				{
-					e1.NodesDictionary.Add(elementData[nElement, j + 1], model.NodesDictionary[elementData[nElement, j + 1]]);
+					elementNodes.Add((Node)model.NodesDictionary[elementData[nElement, j + 1]]);
 				}
+				e1 = new ContinuumElement3DNonLinearDefGrad(elementNodes, material1, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2), InterpolationHexa8.UniqueInstance) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+				{
+					ID = nElement + 1,
+					//ElementType = new ContinuumElement3DNonLinearDefGrad(material1, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+				};
+				
 				model.ElementsDictionary.Add(e1.ID, e1);
 				model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 			}
 
 			// constraint vashh opou z=-1
+			var boundaryConditions = new List<NodalDisplacement>();
 			for (int k = 1; k < 5; k++)
 			{
-				model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
-				model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
-				model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationZ });
+				boundaryConditions.Add(new NodalDisplacement(model.NodesDictionary[k], StructuralDof.TranslationX, 0));
+				boundaryConditions.Add(new NodalDisplacement(model.NodesDictionary[k], StructuralDof.TranslationY, 0));
+				boundaryConditions.Add(new NodalDisplacement(model.NodesDictionary[k], StructuralDof.TranslationZ, 0));
+				
 			}
 
 			// fortish korufhs
-			Load load1;
+			//Load load1;
+			var nodalLoads = new List<NodalLoad>();
 			for (int k = 17; k < 21; k++)
 			{
-				load1 = new Load()
-				{
-					Node = model.NodesDictionary[k],
-					DOF = StructuralDof.TranslationX,
-					Amount = 1 * load_value
-				};
-				model.Loads.Add(load1);
+				nodalLoads.Add(new NodalLoad(model.NodesDictionary[k], StructuralDof.TranslationX, 1 * load_value));
+				
 			}
+			var boundaryConditionsAndNodalLoads = new StructuralBoundaryConditionSet(boundaryConditions, nodalLoads);
+			model.BoundaryConditions.Add(boundaryConditionsAndNodalLoads);
 		}
 	}
 }

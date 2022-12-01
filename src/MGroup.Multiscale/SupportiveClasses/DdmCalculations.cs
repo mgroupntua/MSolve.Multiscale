@@ -1,11 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MGroup.FEM.Entities;
-using MGroup.FEM.Interfaces;
+//using MGroup.FEM.Entities;
+//using MGroup.FEM.Interfaces;
 using MGroup.LinearAlgebra.Output;
-using MGroup.MSolve.Discretization.FreedomDegrees;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
+using MGroup.MSolve.Discretization.Embedding;
+using MGroup.MSolve.Discretization.Entities;
+//using MGroup.MSolve.Discretization.FreedomDegrees;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
@@ -19,10 +23,10 @@ namespace MGroup.Multiscale.SupportiveClasses
 		{
 			int[][] subdElementIds = new int[8][];
 			for (int i1 = 0; i1 < 7; i1++)
-			{subdElementIds[i1] = new int[hexa1 * hexa2 * hexa3 / 8];}
+			{ subdElementIds[i1] = new int[hexa1 * hexa2 * hexa3 / 8]; }
 			subdElementIds[7] = new int[(hexa1 * hexa2 * hexa3 / 8) + 3 * elem1 * elem2];
 
-			int [] subdElementCounters = new int[8];
+			int[] subdElementCounters = new int[8];
 
 			for (int h1 = 0; h1 < hexa1; h1++)
 			{
@@ -33,9 +37,9 @@ namespace MGroup.Multiscale.SupportiveClasses
 						int ElementID = h1 + 1 + (h2 + 1 - 1) * hexa1 + (h3 + 1 - 1) * (hexa1) * hexa2; // h1+1 dioti h1 einai zero based
 
 						int s1; int s2; int s3;
-						if (h1 <= 0.5 * hexa1-1) { s1 = 1; } else { s1 = 2; };
-						if (h2 <= 0.5 * hexa2-1) { s2 = 1; } else { s2 = 2; };
-						if (h3 <= 0.5 * hexa3-1) { s3 = 1; } else { s3 = 2; };
+						if (h1 <= 0.5 * hexa1 - 1) { s1 = 1; } else { s1 = 2; };
+						if (h2 <= 0.5 * hexa2 - 1) { s2 = 1; } else { s2 = 2; };
+						if (h3 <= 0.5 * hexa3 - 1) { s3 = 1; } else { s3 = 2; };
 
 						int subdID = s1 + (s2 - 1) * 2 + (s3 - 1) * 4;
 
@@ -48,10 +52,10 @@ namespace MGroup.Multiscale.SupportiveClasses
 				}
 			}
 
-			
+
 			//int subdID = 8;
 
-			for (int ElementID = hexa1 * hexa2 * hexa3 + 1; ElementID < hexa1 * hexa2 * hexa3+ 3*(elem1*elem2)+1; ElementID++)
+			for (int ElementID = hexa1 * hexa2 * hexa3 + 1; ElementID < hexa1 * hexa2 * hexa3 + 3 * (elem1 * elem2) + 1; ElementID++)
 			{
 				subdElementIds[7][subdElementCounters[7]] = ElementID;
 				subdElementCounters[7] += 1;
@@ -59,13 +63,13 @@ namespace MGroup.Multiscale.SupportiveClasses
 			return subdElementIds;
 		}
 
-		public static int[][] CalculateSubdElementIdsVerticalHexaOnly(int hexa1, int hexa2, int hexa3, int elem1, int elem2, Model model,int nSubdomains)
+		public static int[][] CalculateSubdElementIdsVerticalHexaOnly(int hexa1, int hexa2, int hexa3, int elem1, int elem2, Model model, int nSubdomains)
 		{
 			//int[][] subdElementIds = new int[8][];
 			int[][] subdElementIds = new int[nSubdomains][];
 			for (int i1 = 0; i1 < nSubdomains; i1++)
 			{ subdElementIds[i1] = new int[hexa1 * hexa2 * hexa3 / nSubdomains]; }
-		   
+
 
 
 			int[] subdElementCounters = new int[8];
@@ -120,7 +124,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 		}
 
-		public static void PrintDictionary (Dictionary<int, Dictionary<IDofType, int>> globalNodalDOFsDictionary,int TotalDOFs, int subdomainID)
+		public static void PrintDictionary(Dictionary<int, Dictionary<IDofType, int>> globalNodalDOFsDictionary, int TotalDOFs, int subdomainID)
 		{
 			double[] globalDOFs = new double[TotalDOFs];
 			int counter = 0;
@@ -131,7 +135,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				//Dictionary<DOFType, int> globalDOFTypes = new Dictionary<DOFType, int>(dofTypes.Count);
 				foreach (IDofType dofType in dofTypes.Keys)
 				{
-					if (dofTypes[dofType]!=-1)
+					if (dofTypes[dofType] != -1)
 					{
 						globalDOFs[counter] = dofTypes[dofType];
 						counter += 1;
@@ -150,32 +154,32 @@ namespace MGroup.Multiscale.SupportiveClasses
 		{
 			//1
 			Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
-			//2
+																																										  //2
 			Dictionary<int, List<int>> hexaConnectsShells = new Dictionary<int, List<int>>();
 			//3
 			List<int> totalEmbeddedElements = new List<int>();
 
-			foreach (Element element in model.ElementsDictionary.Values)
+			foreach (IElementType element in model.ElementsDictionary.Values)
 			{
-				if (element.ElementType is IEmbeddedElement)
+				if (element is IEmbeddedElement)
 				{
 					Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
 					foreach (var embeddedNode in ((IEmbeddedElement)element).EmbeddedNodes)
 					{
 						//1
-						Element hostELement = embeddedNode.EmbeddedInElement;
-						if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+						IElementType hostELement = embeddedNode.EmbeddedInElement;
+						if (HostSubdomains.ContainsKey(hostELement.SubdomainID))
 						{
-							if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+							if (!HostSubdomains[hostELement.SubdomainID].Contains(hostELement.ID))
 							{
-								HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+								HostSubdomains[hostELement.SubdomainID].Add(hostELement.ID);
 							}
 						}
 						else
 						{
 							List<int> specificElementsIDs = new List<int>();
 							specificElementsIDs.Add(hostELement.ID);
-							HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);                            
+							HostSubdomains.Add(hostELement.SubdomainID, specificElementsIDs);
 						}
 						//2
 						if (hexaConnectsShells.ContainsKey(hostELement.ID))
@@ -196,33 +200,33 @@ namespace MGroup.Multiscale.SupportiveClasses
 					{ EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem.Add(element.ID, HostSubdomains); }
 				}
 			}
-			return (EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem,hexaConnectsShells);
+			return (EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem, hexaConnectsShells);
 		}
 
 		public static Dictionary<int, Dictionary<int, IList<int>>> FindAmbiguousEmbeddedElementsSubdomains(Model model)
 		{
 			Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndElements = new Dictionary<int, Dictionary<int, IList<int>>>();
 
-			foreach (Element element in model.ElementsDictionary.Values)
+			foreach (IElementType element in model.ElementsDictionary.Values)
 			{
-				if (element.ElementType is IEmbeddedElement)
+				if (element is IEmbeddedElement)
 				{
 					Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
 					foreach (var embeddedNode in ((IEmbeddedElement)element).EmbeddedNodes)
 					{
-						Element hostELement = embeddedNode.EmbeddedInElement;
-						if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+						IElementType hostELement = embeddedNode.EmbeddedInElement;
+						if (HostSubdomains.ContainsKey(hostELement.SubdomainID))
 						{
-							if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+							if (!HostSubdomains[hostELement.SubdomainID].Contains(hostELement.ID))
 							{
-								HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+								HostSubdomains[hostELement.SubdomainID].Add(hostELement.ID);
 							}
 						}
 						else
 						{
 							List<int> specificElementsIDs = new List<int>();
 							specificElementsIDs.Add(hostELement.ID);
-							HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);
+							HostSubdomains.Add(hostELement.SubdomainID, specificElementsIDs);
 						}
 					}
 
@@ -233,7 +237,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			return EmbeddedElementsHostSubdomainsAndElements;
 		}
 
-		public static Dictionary<int, List<int>> DetermineOnlyNeededCombinations( 
+		public static Dictionary<int, List<int>> DetermineOnlyNeededCombinations(
 			Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem,
 			Dictionary<int, List<int>> hexaConnectsShells)
 		{
@@ -251,7 +255,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				foreach (int ListID in connectedShellElementsLists.Keys)
 				{
 					bool isShellFoundInList = false;
-					
+
 					foreach (int shellELement in hexaConnectsShells[hexaID])
 					{
 						if (connectedShellElementsLists[ListID].Contains(shellELement))
@@ -267,7 +271,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				}
 
 				int foundInListsNum = foundInLists.Count();
-				if (foundInListsNum==0)
+				if (foundInListsNum == 0)
 				{
 					List<int> newConnectedShellsList = new List<int>();
 					foreach (int shellELement in hexaConnectsShells[hexaID])
@@ -275,26 +279,26 @@ namespace MGroup.Multiscale.SupportiveClasses
 						newConnectedShellsList.Add(shellELement);
 					}
 
-					connectedShellElementsLists.Add(connectedShellElementsLists.Count()+1, newConnectedShellsList);
+					connectedShellElementsLists.Add(connectedShellElementsLists.Count() + 1, newConnectedShellsList);
 				}
-				if (foundInListsNum==1)
+				if (foundInListsNum == 1)
 				{
 					var updatedList = connectedShellElementsLists[foundInLists.ElementAt(0)];
 					foreach (int shellELement in hexaConnectsShells[hexaID])
 					{
-						if(!updatedList.Contains(shellELement))
+						if (!updatedList.Contains(shellELement))
 						{ updatedList.Add(shellELement); }
 
 					}
 				}
-				if (foundInListsNum>1)
+				if (foundInListsNum > 1)
 				{
 					//lists[1] = lists[1].Union(lists[2]).ToList();
 					//lists.Remove(2);
 
-					for (int i1=1; i1<foundInListsNum; i1++)
+					for (int i1 = 1; i1 < foundInListsNum; i1++)
 					{
-						connectedShellElementsLists[foundInLists.ElementAt(0)] = 
+						connectedShellElementsLists[foundInLists.ElementAt(0)] =
 							connectedShellElementsLists[foundInLists.ElementAt(0)].Union(connectedShellElementsLists[foundInLists.ElementAt(i1)]).ToList();
 						//todo: concat can be used as well if it is known that there are not duplicates
 						connectedShellElementsLists.Remove(foundInLists.ElementAt(i1));
@@ -315,8 +319,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 		public static void CalculateCombinationSolution(List<int> connectedShellElementsLists, Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndElements)
 		{
 			int solutionVectorSize = connectedShellElementsLists.Count();
-			int possibleSolutions = 1;            
-			foreach(int shellId in connectedShellElementsLists)
+			int possibleSolutions = 1;
+			foreach (int shellId in connectedShellElementsLists)
 			{
 				possibleSolutions *= EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
 			}
@@ -342,7 +346,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int maxSubdElements = 0;
 			foreach (var subdmNhexas in EmbeddedElementsHostSubdomainsAndElements.Values)
 			{
-				foreach(var hexaList in subdmNhexas.Values)
+				foreach (var hexaList in subdmNhexas.Values)
 				{
 
 				}
@@ -461,40 +465,40 @@ namespace MGroup.Multiscale.SupportiveClasses
 		public static (Dictionary<int, Dictionary<int, IList<int>>>, Dictionary<int, List<int>>, Dictionary<int, List<int>>) FindEmbeddedElementsSubdomains(Model model, int totalSubdomains)
 		{
 			Dictionary<int, List<int>> AssignedSubdomains = new Dictionary<int, List<int>>(totalSubdomains);//TODO mporoume na tou dwsoume arxikh diastash ean thn exoume
-			// to exw int (tou Dict dld) sumvolizei to subdomain ID
-			// ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
+																											// to exw int (tou Dict dld) sumvolizei to subdomain ID
+																											// ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
 
 			//1
 			Dictionary<int, Dictionary<int, IList<int>>> AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
-			// einai ola ta ambiguous
+																																												   // einai ola ta ambiguous
 
 			//2
 			Dictionary<int, List<int>> hexaConnectsShells = new Dictionary<int, List<int>>();
 			//3
 			List<int> totalEmbeddedElements = new List<int>();
 
-			foreach (Element element in model.ElementsDictionary.Values) // ean xeroume apo thn arxh to id ton embedded mporoume na ton dinoume
+			foreach (IElementType element in model.ElementsDictionary.Values) // ean xeroume apo thn arxh to id ton embedded mporoume na ton dinoume
 			{
-				if (element.ElementType is IEmbeddedElement)
+				if (element is IEmbeddedElement)
 				{
-					var e1 = element.ElementType as IEmbeddedElement;
+					var e1 = element as IEmbeddedElement;
 					Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
 					foreach (var embeddedNode in (e1).EmbeddedNodes)
 					{
 						//1
-						Element hostELement = embeddedNode.EmbeddedInElement;
-						if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+						IElementType hostELement = embeddedNode.EmbeddedInElement;
+						if (HostSubdomains.ContainsKey(hostELement.SubdomainID))
 						{
-							if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+							if (!HostSubdomains[hostELement.SubdomainID].Contains(hostELement.ID))
 							{
-								HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+								HostSubdomains[hostELement.SubdomainID].Add(hostELement.ID);
 							}
 						}
 						else
 						{
 							List<int> specificElementsIDs = new List<int>();
 							specificElementsIDs.Add(hostELement.ID);
-							HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);
+							HostSubdomains.Add(hostELement.SubdomainID, specificElementsIDs);
 						}
 						//2
 						if (hexaConnectsShells.ContainsKey(hostELement.ID))
@@ -535,42 +539,42 @@ namespace MGroup.Multiscale.SupportiveClasses
 		public static (Dictionary<int, Dictionary<int, IList<int>>>, Dictionary<int, List<int>>, Dictionary<int, List<int>>) FindEmbeddedElementsSubdomainsCorrected(Model model, int totalSubdomains)
 		{
 			Dictionary<int, List<int>> AssignedSubdomains = new Dictionary<int, List<int>>(totalSubdomains);//TODO mporoume na tou dwsoume arxikh diastash ean thn exoume
-			// to exw int (tou Dict dld) sumvolizei to subdomain ID
-			// ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
+																											// to exw int (tou Dict dld) sumvolizei to subdomain ID
+																											// ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
 
 			//1
 			Dictionary<int, Dictionary<int, IList<int>>> AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
-			// einai ola ta ambiguous
+																																												   // einai ola ta ambiguous
 
 			//2
 			Dictionary<int, List<int>> hexaConnectsShells = new Dictionary<int, List<int>>();
 			//3
 			List<int> totalEmbeddedElements = new List<int>();
 
-			foreach (Element element in model.ElementsDictionary.Values) // ean xeroume apo thn arxh to id ton embedded mporoume na ton dinoume
+			foreach (IElementType element in model.ElementsDictionary.Values) // ean xeroume apo thn arxh to id ton embedded mporoume na ton dinoume
 			{
-				if (element.ElementType is IEmbeddedElement)
+				if (element is IEmbeddedElement)
 				{
 					Dictionary<int, List<int>> hexaConnectsShellsLocal = new Dictionary<int, List<int>>();
 
-					var e1 = element.ElementType as IEmbeddedElement;
+					var e1 = element as IEmbeddedElement;
 					Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
 					foreach (var embeddedNode in (e1).EmbeddedNodes)
 					{
 						//1
-						Element hostELement = embeddedNode.EmbeddedInElement;
-						if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+						IElementType hostELement = embeddedNode.EmbeddedInElement;
+						if (HostSubdomains.ContainsKey(hostELement.SubdomainID))
 						{
-							if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+							if (!HostSubdomains[hostELement.SubdomainID].Contains(hostELement.ID))
 							{
-								HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+								HostSubdomains[hostELement.SubdomainID].Add(hostELement.ID);
 							}
 						}
 						else
 						{
 							List<int> specificElementsIDs = new List<int>();
 							specificElementsIDs.Add(hostELement.ID);
-							HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);
+							HostSubdomains.Add(hostELement.SubdomainID, specificElementsIDs);
 						}
 						//2
 						if (hexaConnectsShellsLocal.ContainsKey(hostELement.ID))
@@ -737,8 +741,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 		public static Dictionary<int, List<int>> FindEmbeddedElementsSubdomainsCorrectedSimple(Model model, int totalSubdomains)
 		{
 			Dictionary<int, List<int>> AssignedSubdomains = new Dictionary<int, List<int>>(totalSubdomains);//TODO mporoume na tou dwsoume arxikh diastash ean thn exoume
-			// to exw int (tou Dict dld) sumvolizei to subdomain ID
-			// ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
+																											// to exw int (tou Dict dld) sumvolizei to subdomain ID
+																											// ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
 
 			//1
 			//Dictionary<int, Dictionary<int, IList<int>>> AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
@@ -749,30 +753,30 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//3
 			List<int> totalEmbeddedElements = new List<int>();
 
-			foreach (Element element in model.ElementsDictionary.Values) // ean xeroume apo thn arxh to id ton embedded mporoume na ton dinoume
+			foreach (IElementType element in model.ElementsDictionary.Values) // ean xeroume apo thn arxh to id ton embedded mporoume na ton dinoume
 			{
-				if (element.ElementType is IEmbeddedElement)
+				if (element is IEmbeddedElement)
 				{
 					Dictionary<int, List<int>> hexaConnectsShellsLocal = new Dictionary<int, List<int>>();
 
-					var e1 = element.ElementType as IEmbeddedElement;
+					var e1 = element as IEmbeddedElement;
 					Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
 					foreach (var embeddedNode in (e1).EmbeddedNodes)
 					{
 						//1
-						Element hostELement = embeddedNode.EmbeddedInElement;
-						if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+						IElementType hostELement = embeddedNode.EmbeddedInElement;
+						if (HostSubdomains.ContainsKey(hostELement.SubdomainID))
 						{
-							if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+							if (!HostSubdomains[hostELement.SubdomainID].Contains(hostELement.ID))
 							{
-								HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+								HostSubdomains[hostELement.SubdomainID].Add(hostELement.ID);
 							}
 						}
 						else
 						{
 							List<int> specificElementsIDs = new List<int>();
 							specificElementsIDs.Add(hostELement.ID);
-							HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);
+							HostSubdomains.Add(hostELement.SubdomainID, specificElementsIDs);
 						}
 						//2
 						//if (hexaConnectsShellsLocal.ContainsKey(hostELement.ID))
@@ -843,19 +847,19 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//private void BuildSubdomainOfEachElement()
 			foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
 			{
-				foreach (Element element in subdomain.Elements)
-				{ element.Subdomain = subdomain; }
+				foreach (IElementType element in subdomain.Elements)
+				{ element.SubdomainID = subdomain.ID; }
 			}
 
 			//private void BuildElementDictionaryOfEachNode()            
-			foreach (Element element in model.ElementsDictionary.Values)
+			foreach (IElementType element in model.ElementsDictionary.Values)
 			{
 				foreach (Node node in element.Nodes)
 				{ node.ElementsDictionary.Add(element.ID, element); }
 			}
 
 			foreach (Node node in model.NodesDictionary.Values)
-			{ node.BuildSubdomainDictionary(); }
+			{ node.FindAssociatedSubdomains(); }
 
 
 			//TEMP COMMENT OUT
@@ -869,8 +873,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//private void BuildSubdomainOfEachElement()
 			foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
 			{
-				foreach (Element element in subdomain.Elements)
-				{ element.Subdomain = null; }  // subdomain; }
+				foreach (IElementType element in subdomain.Elements)
+				{ element.SubdomainID = 0; }  // subdomain; }
 			}
 
 			//private void BuildElementDictionaryOfEachNode()            
@@ -882,7 +886,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			foreach (Node node in model.NodesDictionary.Values)
 			{
 				node.ElementsDictionary.Clear();
-				node.SubdomainsDictionary.Clear(); //to ena mono egine v2 opws fainetai sto Node.BuildSubdomainDictionary().
+				node.Subdomains.Clear(); //to ena mono egine v2 opws fainetai sto Node.BuildSubdomainDictionary().
 			}
 			//foreach (Node node in model.NodesDictionary.Values)
 			//{ node.BuildSubdomainDictionary(); }
@@ -898,14 +902,14 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 		public static int[][] DetermineHexaElementsSubdomainsFromModel(Model model)
 		{
-			int[][] subdomainsAndHexas = new int[model.Subdomains.Count()][];
+			int[][] subdomainsAndHexas = new int[model.SubdomainsDictionary.Count()][];
 
-			for (int subdomainId = 0; subdomainId < model.Subdomains.Count(); subdomainId++)
+			for (int subdomainId = 0; subdomainId < model.SubdomainsDictionary.Count(); subdomainId++)
 			{
-				var subdomain = model.Subdomains[subdomainId]; //ZERo based model.subdomainsDictionary access == model.Subdomains access
+				var subdomain = model.SubdomainsDictionary[subdomainId]; //ZERo based model.subdomainsDictionary access == model.Subdomains access
 				subdomainsAndHexas[subdomainId] = new int[subdomain.Elements.Count()];
 				int hexaPositionInArray = 0;
-				foreach (Element element in subdomain.Elements)
+				foreach (IElementType element in subdomain.Elements)
 				{
 					subdomainsAndHexas[subdomainId][hexaPositionInArray] = element.ID;
 					hexaPositionInArray++;

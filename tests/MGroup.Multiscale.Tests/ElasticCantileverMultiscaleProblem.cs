@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+
 using MGroup.LinearAlgebra.Commons;
-using MGroup.MSolve.Logging;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Multiscale.Tests.SeparationBenchmarks1;
+using MGroup.NumericalAnalyzers.Logging;
+
 using Xunit;
 
 namespace MGroup.Multiscale.Tests
@@ -13,8 +16,7 @@ namespace MGroup.Multiscale.Tests
 		{
 			IReadOnlyList<Dictionary<int, double>> expectedDisplacements = GetExpectedDisplacements();
 			TotalDisplacementsPerIterationLog computedDisplacements = IntegrationElasticCantileverBenchmark.RunExample();
-			Assert.True( AreDisplacementsSame(expectedDisplacements, computedDisplacements));
-
+			Assert.True(AreDisplacementsSame(expectedDisplacements, computedDisplacements));
 		}
 
 
@@ -49,16 +51,17 @@ namespace MGroup.Multiscale.Tests
 		private static bool AreDisplacementsSame(IReadOnlyList<Dictionary<int, double>> expectedDisplacements,
 			TotalDisplacementsPerIterationLog computedDisplacements)
 		{
-			int subdomainID = 1;
 			var comparer = new ValueComparer(1E-13);
 			for (int iter = 0; iter < expectedDisplacements.Count; ++iter)
 			{
+				int count = 0;
 				foreach (int dof in expectedDisplacements[iter].Keys)
 				{
-					if (!comparer.AreEqual(expectedDisplacements[iter][dof], computedDisplacements.GetTotalDisplacement(iter, subdomainID, dof)))
+					if (!comparer.AreEqual(expectedDisplacements[iter][dof], computedDisplacements.GetTotalDisplacement(iter, computedDisplacements.WatchDofs[count].Item1, computedDisplacements.WatchDofs[count].Item2)))
 					{
 						return false;
 					}
+					count++;
 				}
 			}
 			return true;

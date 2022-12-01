@@ -1,5 +1,9 @@
+using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Multiscale.SupportiveClasses;
+using MGroup.Multiscale.Tests.FEMpartB;
+
 using Xunit;
 
 namespace MGroup.Multiscale.Tests
@@ -9,22 +13,22 @@ namespace MGroup.Multiscale.Tests
 		[Fact]
 		public static void CheckElasticMicrostructure()
 		{
-			(double[] stressesCheck1, double[] stressesCheck2, double[] stressesCheck3, double[] stressesCheck4, IVector uInitialFreeDOFs_state1, IVector uInitialFreeDOFs_state2) = SeparateCodeCheckingClass4.Check05bStressIntegrationObje_Integration();
+			(double[] stressesCheck1, double[] stressesCheck2, double[] stressesCheck3, double[] stressesCheck4, double[] uInitialFreeDOFs_state1, double[] uInitialFreeDOFs_state2) = SeparateCodeCheckingClass4.Check05bStressIntegrationObje_Integration();
 
 			string results_file1 = "..\\..\\..\\MGroup.Multiscale.Tests\\InputFiles\\MicroStructureAndIntegrationTestsA\\U_sunol_micro_1.txt";
 			string results_file2 = "..\\..\\..\\MGroup.Multiscale.Tests\\InputFiles\\MicroStructureAndIntegrationTestsA\\U_sunol_micro_2.txt";
 			double[] displacements1sIncrement = PrintUtilities.ReadVector(results_file1);
 			double[] displacements2ndIncrement = PrintUtilities.ReadVector(results_file2);
 
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1.CopyToArray()));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2.CopyToArray()));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2));
 
 		}
 
 		[Fact]
 		public static void CheckGrapheneMicrostructure()
 		{
-			(double[] stressesCheck3, double[] stressesCheck4, double[,] consCheck1, IVector uInitialFreeDOFs_state1, IVector uInitialFreeDOFs_state2) = SeparateCodeCheckingClass4.Check_Graphene_rve_Obje_Integration();
+			(double[] stressesCheck3, double[] stressesCheck4, double[,] consCheck1, double[] uInitialFreeDOFs_state1, double[] uInitialFreeDOFs_state2) = SeparateCodeCheckingClass4.Check_Graphene_rve_Obje_Integration();
 
 			string results_file1 = "..\\..\\..\\MGroup.Multiscale.Tests\\InputFiles\\MicroStructureAndIntegrationTestsB\\uInitialFreeDOFs_state1.txt";
 			string results_file2 = "..\\..\\..\\MGroup.Multiscale.Tests\\InputFiles\\MicroStructureAndIntegrationTestsB\\uInitialFreeDOFs_state2.txt";
@@ -44,13 +48,12 @@ namespace MGroup.Multiscale.Tests
 			double[] stressesCheck3Expected = PrintUtilities.ReadVector(results_file4);
 			double[] stressesCheck4Expected = PrintUtilities.ReadVector(results_file5);
 
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1.CopyToArray()));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2.CopyToArray()));
-			Assert.True(BondSlipTest.AreDisplacementsSame(consCheck1, consCheck1Expected));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(stressesCheck3, stressesCheck3Expected));
-			Assert.True(NRNLAnalyzerDevelopTest.AreDisplacementsSame(stressesCheck4, stressesCheck4Expected));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements1sIncrement, uInitialFreeDOFs_state1, 1E-9));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(displacements2ndIncrement, uInitialFreeDOFs_state2, 1E-9));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(consCheck1, consCheck1Expected, 1E-8));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(stressesCheck3, stressesCheck3Expected, 1E-12));
+			Assert.True(ComparisonMetods.AreDisplacementsSame(stressesCheck4, stressesCheck4Expected, 1E-11));//11
 
 		}
-
 	}
 }

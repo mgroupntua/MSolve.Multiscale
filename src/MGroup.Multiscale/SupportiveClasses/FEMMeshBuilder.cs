@@ -1,13 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using MGroup.FEM.Elements;
-using MGroup.FEM.Entities;
-using MGroup.Materials;
-using MGroup.Materials.ShellMaterials;
-using MGroup.MSolve.Discretization.FreedomDegrees;
-using MGroup.MSolve.Discretization.Integration.Quadratures;
-using MGroup.MSolve.Discretization.Interfaces;
+using MGroup.Constitutive.Structural;
+using MGroup.Constitutive.Structural.Cohesive;
+using MGroup.Constitutive.Structural.Continuum;
+using MGroup.Constitutive.Structural.Shells;
+using MGroup.FEM.Structural.Continuum;
+using MGroup.FEM.Structural.Embedding;
+using MGroup.FEM.Structural.Shells;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Entities;
+using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
+using MGroup.MSolve.Numerics.Integration.Quadratures;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
@@ -258,12 +262,8 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int elementCounter = 0;
 			int subdomainID = 1;
 
-			ElasticMaterial3D material1 = new ElasticMaterial3D()
-			{
-				YoungModulus = E_disp,
-				PoissonRatio = ni_disp,
-			};
-			Element e1;
+			ElasticMaterial3D material1 = new ElasticMaterial3D(youngModulus: E_disp, poissonRatio : ni_disp);
+			
 			int ElementID;
 			int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -283,16 +283,18 @@ namespace MGroup.Multiscale.SupportiveClasses
 						globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 						globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
-						e1 = new Element()
-						{
-							ID = ElementID,
-							ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
-						};
+						List<INode> elementNodes = new List<INode>()
+						{model.NodesDictionary[globalNodeIDforlocalNode_i[0]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[1]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[2]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[3]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[4]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[5]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[7]]};
+						var e1 = new Hexa8NonLinear(elementNodes, material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
+						e1.ID = ElementID;
 
-						for (int j = 0; j < 8; j++)
-						{
-							e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
-						}
 						model.ElementsDictionary.Add(e1.ID, e1);
 						model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 						elementCounter++;
@@ -325,7 +327,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				Dq[6, 3 * j + 0] = model.NodesDictionary[komvos].Z;
 				Dq[7, 3 * j + 1] = model.NodesDictionary[komvos].X;
 				Dq[8, 3 * j + 2] = model.NodesDictionary[komvos].Y;
-				boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+				boundaryNodes.Add(komvos, (Node)model.NodesDictionary[komvos]);
 			}
 		}
 
@@ -386,7 +388,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				nodeCoordY = o_xsunol[6 * nNode + 1];
 				nodeCoordZ = o_xsunol[6 * nNode + 2];
 
-				model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ));
+				model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 				eswterikosNodeCounter++;
 			}
 			int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
@@ -394,12 +396,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 
 			// perioxh orismou shell elements
-			var material2 = new ShellElasticMaterial3D()
-			{
-				YoungModulus = E_shell,
-				PoissonRatio = ni_shell,
-				ShearCorrectionCoefficientK = 5 / 6,
-			};
+			var material2 = new ShellElasticMaterial3D(E_shell, ni_shell, (double)5 / 6);
 
 			int elements = elem1 * elem2;
 			int fdof_8 = 5 * (elem1 * (3 * elem2 + 2) + 2 * elem2 + 1);
@@ -410,7 +407,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			double[] Tk_vec = new double[8];
 			double[][] VH = new double[8][];
 			int[] midsurfaceNodeIDforlocalShellNode_i = new int[8];
-			Element e2;
+			//IElementType e2;
 			int ElementID;
 			int subdomainID = 1;
 
@@ -432,28 +429,29 @@ namespace MGroup.Multiscale.SupportiveClasses
 					VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 5];
 				}
 
-				e2 = new Element()
-				{
-					ID = ElementID,
-					//
-					ElementType = new Shell8NonLinear(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
-					{
-						//oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
-						oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },},
-						tk = Tk_vec,
-					}
-				};
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue)]);
-				}
+				List<INode> elementNodes = new List<INode>()
+				{model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[0] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[1] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[2] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[3] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[4] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[5] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[6] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[7] + PreviousNodesNumberValue)]};
+				var e2 = new Shell8NonLinear(elementNodes, material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3));
+				e2.ID = ElementID;
+				e2.oVn_i = new double[][]
+				{ 
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
+					new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },};
+				e2.tk = Tk_vec;
+				
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
 				eswterikosElementCounter++;
@@ -475,16 +473,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//
 
 			//orismos elements katw strwshs
-			BenzeggaghKenaneCohesiveMaterial material3 = new Materials.BenzeggaghKenaneCohesiveMaterial()
-			{
-				T_o_3 = T_o_3,
-				D_o_3 = D_o_3,
-				D_f_3 = D_f_3,
-				T_o_1 = T_o_1,
-				D_o_1 = D_o_1,
-				D_f_1 = D_f_1,
-				n_curve = n_curve,
-			};
+			BenzeggaghKenaneCohesiveMaterial material3 = new BenzeggaghKenaneCohesiveMaterial(T_o_3, D_o_3, D_f_3, T_o_1, D_o_1, D_f_1, n_curve);
 
 			int[] midsurfaceNodeIDforlocalCohesiveNode_i = new int[8];
 			for (int nElement = 0; nElement < elements; nElement++)
@@ -500,32 +489,47 @@ namespace MGroup.Multiscale.SupportiveClasses
 					VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
 				}
 
-				e2 = new Element()
-				{
-					ID = ElementID,
-					ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
-					{
-						oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				List<INode> elementNodes = new List<INode>()
+				{model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]};
+				
+				var e2 = new CohesiveShell8ToHexa20(elementNodes, material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)); //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				e2.ID = ElementID;
+				e2.tk = Tk_vec;
+				e2.ShellElementSide = 0;
+				e2.oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
-						tk = Tk_vec,
-						ShellElementSide = 0,
-					}
+												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },};
+				{
 				};
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
-				}
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface),
-						model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
-				}
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
+				//}
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface),
+				//		model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
+				//}
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
 				eswterikosElementCounter++;
@@ -558,32 +562,60 @@ namespace MGroup.Multiscale.SupportiveClasses
 					VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
 				}
 
-				e2 = new Element()
-				{
-					ID = ElementID,
-					ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
-					{
-						oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				List<INode> elementNodes = new List<INode>()
+				{model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]};
+				var e2 = new CohesiveShell8ToHexa20(elementNodes, material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)); //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				e2.ID = ElementID;
+				e2.oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
-						tk = Tk_vec,
-						ShellElementSide = 1,
-					}
-				};
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
-				}
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface),
-						model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
-				}
+												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] } };
+				e2.tk = Tk_vec;
+				e2.ShellElementSide = 1;
+				//{
+				//	ID = ElementID,
+				//	ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				//	{
+				//		oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
+				//		tk = Tk_vec,
+				//		ShellElementSide = 1,
+				//	}
+				//};
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
+				//}
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface),
+				//		model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
+				//}
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
 				eswterikosElementCounter++;
@@ -592,12 +624,12 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 		}
 
-		public static Dictionary<Node, IList<IDofType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
+		public static Dictionary<Node, IList<IStructuralDofType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
 		{
 			//Origin : RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering()
 			//modifications: return type and nodes and dofs to be constrained
 
-			Dictionary<Node, IList<IDofType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<IDofType>>();
+			Dictionary<Node, IList<IStructuralDofType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<IStructuralDofType>>();
 
 			// Perioxh renumbering initialization 
 			renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -609,14 +641,14 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int nodeID;
 
 			nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-			RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+			RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[nodeID], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
 
 			nodeID = renumbering.GetNewNodeNumbering(Topol_rve(hexa1 + 1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-			RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+			RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[nodeID], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
 			nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, hexa2 + 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-			RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<IDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+			RigidBodyNodeConstraints.Add((Node)model.NodesDictionary[nodeID], new List<IStructuralDofType>() { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
 
 			//nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, 1, hexa3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
@@ -689,12 +721,12 @@ namespace MGroup.Multiscale.SupportiveClasses
 
 
 			// perioxh orismou shell elements
-			var material2 = new ShellElasticMaterial3D()
-			{
-				YoungModulus = E_shell,
-				PoissonRatio = ni_shell,
-				ShearCorrectionCoefficientK = 5 / 6,
-			};
+			var material2 = new ShellElasticMaterial3D(E_shell, ni_shell, (double)5 / 6);
+			//{
+			//	YoungModulus = E_shell,
+			//	PoissonRatio = ni_shell,
+			//	ShearCorrectionCoefficientK = 5 / 6,
+			//};
 
 			int elements = elem1 * elem2;
 			int fdof_8 = 5 * (elem1 * (3 * elem2 + 2) + 2 * elem2 + 1);
@@ -705,7 +737,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			double[] Tk_vec = new double[8];
 			double[][] VH = new double[8][];
 			int[] midsurfaceNodeIDforlocalShellNode_i = new int[8];
-			Element e2;
+			//Element e2;
 			int ElementID;
 			int subdomainID = 1;
 
@@ -727,28 +759,48 @@ namespace MGroup.Multiscale.SupportiveClasses
 					VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 5];
 				}
 
-				e2 = new Element()
-				{
-					ID = ElementID,
-					//
-					ElementType = new Shell8NonLinear(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
-					{
-						//oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
-						oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
+
+				List<INode> elementNodes = new List<INode>()
+				{model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[0] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[1] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[2] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[3] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[4] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[5] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[6] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[7] + PreviousNodesNumberValue)]};
+				var e2 = new Shell8NonLinear(elementNodes, material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)); //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
+				e2.ID = ElementID;
+				e2.oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },},
-						tk = Tk_vec,
-					}
-				};
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue)]);
-				}
+												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] }};
+				e2.tk = Tk_vec;
+				//{
+				//	ID = ElementID,
+				//	//
+				//	ElementType = new Shell8NonLinear(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
+				//	{
+				//		//oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
+				//		oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },},
+				//		tk = Tk_vec,
+				//	}
+				//};
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue)]);
+				//}
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
 				eswterikosElementCounter++;
@@ -770,7 +822,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//
 
 			//orismos elements katw strwshs
-			BondSlipCohMat material3 = new Materials.BondSlipCohMat(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
+			BondSlipMaterial material3 = new BondSlipMaterial(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
 
 			int[] midsurfaceNodeIDforlocalCohesiveNode_i = new int[8];
 			for (int nElement = 0; nElement < elements; nElement++)
@@ -786,32 +838,60 @@ namespace MGroup.Multiscale.SupportiveClasses
 					VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
 				}
 
-				e2 = new Element()
-				{
-					ID = ElementID,
-					ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
-					{
-						oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				List<INode> elementNodes = new List<INode>()
+				{model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]};
+				var e2 = new CohesiveShell8ToHexa20(elementNodes, material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)); //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				e2.ID = ElementID;
+				e2.oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
-						tk = Tk_vec,
-						ShellElementSide = 0,
-					}
-				};
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
-				}
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface),
-						model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
-				}
+												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] } };
+				e2.tk = Tk_vec;
+				e2.ShellElementSide = 0;
+				//{
+				//	ID = ElementID,
+				//	ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				//	{
+				//		oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
+				//		tk = Tk_vec,
+				//		ShellElementSide = 0,
+				//	}
+				//};
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
+				//}
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface),
+				//		model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
+				//}
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
 				eswterikosElementCounter++;
@@ -845,32 +925,60 @@ namespace MGroup.Multiscale.SupportiveClasses
 					VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
 				}
 
-				e2 = new Element()
-				{
-					ID = ElementID,
-					ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
-					{
-						oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				List<INode> elementNodes = new List<INode>()
+				{model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[0] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[2] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[3] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[4] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[5] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[6] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)],
+				model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[7] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]};
+				var e2 = new CohesiveShell8ToHexa20(elementNodes, (ICohesiveZoneMaterial)material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)); //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				e2.ID = ElementID;
+				e2.oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
 												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
-												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
-						tk = Tk_vec,
-						ShellElementSide = 1,
-					}
-				};
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
-				}
-				for (int j1 = 0; j1 < 8; j1++)
-				{
-					e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface),
-						model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
-				}
+												 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] }};
+				e2.tk = Tk_vec;
+				e2.ShellElementSide = 1;
+				//{
+				//	ID = ElementID,
+				//	ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+				//	{
+				//		oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
+				//								 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
+				//		tk = Tk_vec,
+				//		ShellElementSide = 1,
+				//	}
+				//};
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue)]);
+				//}
+				//for (int j1 = 0; j1 < 8; j1++)
+				//{
+				//	e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface),
+				//		model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
+				//}
 				model.ElementsDictionary.Add(e2.ID, e2);
 				model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
 				eswterikosElementCounter++;
@@ -923,7 +1031,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 						nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
 						nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 						nodeCounter++;
 					}
 				}
@@ -934,12 +1042,11 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int elementCounter = 0;
 			int subdomainID = 1;
 
-			ElasticMaterial3D material1 = new ElasticMaterial3D()
-			{
-				YoungModulus = E_disp,
-				PoissonRatio = ni_disp,
-			};
-			Element e1;
+			ElasticMaterial3D material1 = new ElasticMaterial3D(E_disp, ni_disp);
+			//{
+			//	YoungModulus = E_disp,
+			//	PoissonRatio = ni_disp,
+			//};
 			int ElementID;
 			int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -950,25 +1057,39 @@ namespace MGroup.Multiscale.SupportiveClasses
 					for (int h3 = 0; h3 < hexa3; h3++)
 					{
 						ElementID = h1 + 1 + (h2 + 1 - 1) * hexa1 + (h3 + 1 - 1) * (hexa1) * hexa2; // h1+1 dioti h1 einai zero based
-						globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[4] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[5] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[2] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[2] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[4] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[5] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
-						e1 = new Element()
+						List<INode> elementNodes = new List<INode>()
 						{
-							ID = ElementID,
-							ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+							model.NodesDictionary[globalNodeIDforlocalNode_i[0]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[1]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[2]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[3]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[4]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[5]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
+							model.NodesDictionary[globalNodeIDforlocalNode_i[7]]
 						};
+						var elementFactory = new ContinuumElement3DFactory(material1, commonDynamicProperties: null);
+						IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, elementNodes);
+						e1.ID = ElementID;
 
-						for (int j = 0; j < 8; j++)
-						{
-							e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
-						}
+						//{
+						//	ID = ElementID,
+						//	ElementType = new ContinuumElement3D(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+						//};
+
+						//for (int j = 0; j < 8; j++)
+						//{
+						//	e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
+						//}
 						model.ElementsDictionary.Add(e1.ID, e1);
 						model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 						elementCounter++;
@@ -1050,7 +1171,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 						nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
 						nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+						model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
 						nodeCounter++;
 					}
 				}
@@ -1061,12 +1182,11 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int elementCounter = 0;
 			int subdomainID = 1;
 
-			ElasticMaterial3D material1 = new ElasticMaterial3D()
-			{
-				YoungModulus = E_disp,
-				PoissonRatio = ni_disp,
-			};
-			Element e1;
+			ElasticMaterial3D material1 = new ElasticMaterial3D(E_disp, ni_disp);
+			//{
+			//	YoungModulus = E_disp,
+			//	PoissonRatio = ni_disp,
+			//};
 			int ElementID;
 			int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -1077,25 +1197,36 @@ namespace MGroup.Multiscale.SupportiveClasses
 					for (int h3 = 0; h3 < hexa3; h3++)
 					{
 						ElementID = h1 + 1 + (h2 + 1 - 1) * hexa1 + (h3 + 1 - 1) * (hexa1) * hexa2; // h1+1 dioti h1 einai zero based
-						globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[4] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[5] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[2] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-						globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[2] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[4] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[5] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+						List<INode> elementNodes = new List<INode>()
+						{ model.NodesDictionary[globalNodeIDforlocalNode_i[0]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[1]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[2]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[3]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[4]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[5]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[6]],
+						model.NodesDictionary[globalNodeIDforlocalNode_i[7]]};
+						//IElementType e1 = new ContinuumElement3D(elementNodes, InterpolationHexa8.UniqueInstance, GaussLegendre3D.GetQuadratureWithOrder(orderXi: 3, orderEta: 3, orderZeta: 3), material1, CellType.Hexa8),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+						var elementFactory = new ContinuumElement3DFactory(material1, commonDynamicProperties: null);
+						IElementType e1 = elementFactory.CreateElement(CellType.Hexa8, elementNodes);
+						e1.ID = ElementID;
+						//{
+						//	ID = ElementID
+						//	ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+						//};
 
-						e1 = new Element()
-						{
-							ID = ElementID,
-							ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
-						};
-
-						for (int j = 0; j < 8; j++)
-						{
-							e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
-						}
+						//for (int j = 0; j < 8; j++)
+						//{
+						//	e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
+						//}
 						model.ElementsDictionary.Add(e1.ID, e1);
 						model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
 						elementCounter++;
@@ -1134,16 +1265,6 @@ namespace MGroup.Multiscale.SupportiveClasses
 			//}
 
 			int i_2 = 1;
-			for (int i1=1; i1<hexa1+2;i1++)
-			{
-				for (int i3 = 1; i3 < hexa3 + 2; i3++)
-				{
-					int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-					boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
-				}
-			}
-
-			i_2 = hexa2+1;
 			for (int i1 = 1; i1 < hexa1 + 2; i1++)
 			{
 				for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1153,7 +1274,17 @@ namespace MGroup.Multiscale.SupportiveClasses
 				}
 			}
 
-			int i_1 =  1;
+			i_2 = hexa2 + 1;
+			for (int i1 = 1; i1 < hexa1 + 2; i1++)
+			{
+				for (int i3 = 1; i3 < hexa3 + 2; i3++)
+				{
+					int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+					boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+				}
+			}
+
+			int i_1 = 1;
 			for (int i2 = 2; i2 < hexa2 + 1; i2++)
 			{
 				for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1163,7 +1294,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				}
 			}
 
-			i_1 = hexa1+1;
+			i_1 = hexa1 + 1;
 			for (int i2 = 2; i2 < hexa2 + 1; i2++)
 			{
 				for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1174,7 +1305,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			}
 		}
 
-		public static IEnumerable<Element> GetHostGroupForCohesiveElement(Element cohesive, rveMatrixParameters mp, Model model, string renumberingVectorPath)
+		public static IEnumerable<IElementType> GetHostGroupForCohesiveElement(IElementType cohesive, rveMatrixParameters mp, Model model, string renumberingVectorPath)
 		{            
 
 			int hexa1 = mp.hexa1;// diakritopoihsh
@@ -1184,7 +1315,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 			int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
 			int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
 
-			IList<Element> possibleHosts = new List<Element>(8);
+			IList<IElementType> possibleHosts = new List<IElementType>(8);
 
 			double tol = 3e-10; //apo hexa8.GetNaturalCoordinates
 
@@ -1193,10 +1324,10 @@ namespace MGroup.Multiscale.SupportiveClasses
 			double L_2 = mp.L02 / ((double)mp.hexa2);
 			double L_3 = mp.L03 / ((double)mp.hexa3);
 
-			var cohNodes = cohesive.NodesDictionary.Values.ToList();
+			var cohNodes = cohesive.Nodes.ToList();
 			for (int i1 = 8; i1 < 16; i1++)
 			{
-				Node embNode = cohNodes[i1];
+				Node embNode = (Node)cohNodes[i1];
 
 				// kata to dhmiourgia_sundesmologias_embed_t.m
 				double x_ek = embNode.X + 0.5 * mp.L01;
@@ -1293,7 +1424,7 @@ namespace MGroup.Multiscale.SupportiveClasses
 				possibleHostIds.Add(possibleHosts.ElementAt(i1).ID);
 			}
 			possibleHostIds.Sort();
-			possibleHosts = new List<Element>(possibleHosts.Count());
+			possibleHosts = new List<IElementType>(possibleHosts.Count());
 			for (int k1 = 0; k1 < possibleHostIds.Count; k1++)
 			{
 				possibleHosts.Add(model.ElementsDictionary[possibleHostIds[k1]]);
