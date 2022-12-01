@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,10 +10,6 @@ using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.DofOrdering.Reordering;
-using MGroup.LinearAlgebra.Matrices;
-using MGroup.MSolve.Discretization.Entities;
-using MGroup.MSolve.Solution;
-using MGroup.Solvers.AlgebraicModel;
 
 namespace MiMsolve.SolutionStrategies
 {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
+namespace MGroup.Multiscale.SupportiveClasses
 {
     class commonCalculations
     {

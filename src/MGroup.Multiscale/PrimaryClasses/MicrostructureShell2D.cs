@@ -1,4 +1,3 @@
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.Constitutive.Structural.Providers;

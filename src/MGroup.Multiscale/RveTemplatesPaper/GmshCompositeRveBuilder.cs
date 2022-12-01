@@ -106,7 +106,7 @@ namespace MGroup.Multiscale.RveTemplatesPaper
             //define outer elements group
             int[] ContinuumTet4NodesNumbering = new int[4] { 0, 1, 2, 3 };
             int subdomainID = 0;
-            var factoryOutter = new ContinuumElement3DFactory((ElasticMaterial3D)matrixMaterial, null);
+            var factoryOutter = new MGroup.FEM.Structural.Continuum.ContinuumElement3DFactory((ElasticMaterial3D)matrixMaterial, null);
             for (int i1 = 0; i1 < celltype4ELementsAndNodes[nElementGroupsI-1].GetLength(0); i1++)
             {
                 List<Node> nodeSet = new List<Node>();
@@ -137,7 +137,7 @@ namespace MGroup.Multiscale.RveTemplatesPaper
             }
 
             //define inner elements group
-            var factoryInner = new ContinuumElement3DFactory((ElasticMaterial3D)inclusionMaterial, null);
+            var factoryInner = new MGroup.FEM.Structural.Continuum.ContinuumElement3DFactory((ElasticMaterial3D)inclusionMaterial, null);
             for (int i2 = 0; i2 < nElementGroupsI - 1; i2++)
             {
 

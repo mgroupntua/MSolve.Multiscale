@@ -1,4 +1,3 @@
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.Constitutive.Structural.Providers;
@@ -12,6 +11,7 @@ using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
 using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.LinearSystem;
+using MGroup.Multiscale.SupportiveClasses;
 using MGroup.NumericalAnalyzers.Discretization.NonLinear;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;

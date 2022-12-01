@@ -1,27 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.Cohesive;
 using MGroup.Constitutive.Structural.Continuum;
 using MGroup.Constitutive.Structural.Shells;
-//using MGroup.FEM.Elements;
-//using MGroup.FEM.Entities;
 using MGroup.FEM.Structural.Continuum;
 using MGroup.FEM.Structural.Embedding;
 using MGroup.FEM.Structural.Shells;
-//using MGroup.Materials;
-//using MGroup.Materials.ShellMaterials;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Entities;
 using MGroup.MSolve.MultiscaleAnalysis.SupportiveClasses;
-//using MGroup.MSolve.Discretization.FreedomDegrees;
-//using MGroup.MSolve.Discretization.Integration.Quadratures;
-//using MGroup.MSolve.Discretization.Interfaces;
 using MGroup.MSolve.Numerics.Integration.Quadratures;
-using MGroup.MSolve.Numerics.Interpolation;
 
 namespace MGroup.Multiscale.SupportiveClasses
 {
