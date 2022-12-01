@@ -106,7 +106,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             // TODO Gerasimos this is a temporar position for the solve creation. It should be done in its original position
             //in the method update material stn arxh pou ginetai to initialization twn diforwn entities 
             (solver, globalAlgebraicModel) = algebraicStrategy.GetSolver(model);
-            provider = new ProblemStructural(model, globalAlgebraicModel, solver); //TODO ger mv1: to pou vrisketai h dhmiourgia tou problem structural prin to orderdofs dld//.
+            provider = new ProblemStructural(model, globalAlgebraicModel); //TODO ger mv1: to pou vrisketai h dhmiourgia tou problem structural prin to orderdofs dld//.
             globalAlgebraicModel.OrderDofs();
         }
 
@@ -335,10 +335,9 @@ namespace MGroup.MSolve.MultiscaleAnalysis
 
         public GenericConstitutiveLawState CreateState()//.1`
         {
-            var subdomainUpdaters = new NonLinearModelUpdaterWithInitialConditions(globalAlgebraicModel);
-			currentState = new GenericConstitutiveLawState(this, new (string, double)[0]); // TODO: an xreiazottan pote tetoia ulopoihsh tote tha itan to tupou  {(HARDENING_X, alpha[0]),(HARDENING_Y, alpha[1])}
+            currentState = new GenericConstitutiveLawState(this, new (string, double)[0]); // TODO: an xreiazottan pote tetoia ulopoihsh tote tha itan to tupou  {(HARDENING_X, alpha[0]),(HARDENING_Y, alpha[1])}
 																						   //klp san to bondslip coesive materials kai ta eprepe na perilamvanei tou rve oles tis state variables dld kai ta materials kai tis free metakinhseis twn elements kai pitano contact klp kai ta uprescribed
-			subdomainUpdaters.UpdateState(currentState);
+			provider.UpdateState(currentState);
             
                
 

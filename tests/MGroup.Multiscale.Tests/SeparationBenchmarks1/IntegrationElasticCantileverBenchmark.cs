@@ -44,7 +44,7 @@ namespace MGroup.Multiscale.Tests.SeparationBenchmarks1
 			ISolver solver = solverBuilder.BuildSolver(algebraicModel);
 
 			// Problem type
-			var provider = new ProblemStructural(model, algebraicModel, solver);
+			var provider = new ProblemStructural(model, algebraicModel);
 
 			
 

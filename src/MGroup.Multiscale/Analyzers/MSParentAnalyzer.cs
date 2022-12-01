@@ -48,9 +48,11 @@ namespace MiMsolve.multiScaleSupportiveClasses
 
 		public void BuildMatrices()
         {
-            provider.CalculateMatrix();
+			var matrix = provider.GetMatrix();
 
-        }
+			algebraicModel.LinearSystem.Matrix = matrix;
+
+		}
 
         public IGlobalVector GetOtherRhsComponents(IGlobalVector currentSolution)
         {

@@ -116,8 +116,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             #region Creation of nessesary analyzers for NRNLAnalyzer
             //ProblemStructural provider = new ProblemStructural(model, algebraicModel, solver);
 
-            var subdomainUpdaters = new NonLinearModelUpdaterWithInitialConditions(algebraicModel);
-
+            
             ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
 
             //v2.4
@@ -130,7 +129,7 @@ namespace MGroup.MSolve.MultiscaleAnalysis
             #endregion
 
             #region Creation of Microstructure analyzer (NRNLdevelop temporarilly). 
-            DisplacementBvpNRNLAnalyzer microAnalyzer = new DisplacementBvpNRNLAnalyzer(model,solver, subdomainUpdaters, 
+            DisplacementBvpNRNLAnalyzer microAnalyzer = new DisplacementBvpNRNLAnalyzer(model,solver, 
                 provider, increments,  uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, algebraicModel);
             microAnalyzer.SetMaxIterations = MaxIterations;

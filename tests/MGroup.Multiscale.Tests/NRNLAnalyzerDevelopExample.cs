@@ -65,7 +65,7 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 			solverFactory.DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 			var algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			ISolver solver = solverFactory.BuildSolver(algebraicModel);
-			ProblemStructural provider = new ProblemStructural(model, algebraicModel, solver); //TODO ger mv1: to pou vrisketai h dhmiourgia tou problem structural prin to orderdofs dld
+			ProblemStructural provider = new ProblemStructural(model, algebraicModel); //TODO ger mv1: to pou vrisketai h dhmiourgia tou problem structural prin to orderdofs dld
 			algebraicModel.OrderDofs();
 
 			//TODO Ger 45-50
@@ -99,10 +99,9 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 
 			#region create nesessary structures and analyzers And Solve 1st increment            
 			//ProblemStructural provider = new ProblemStructural(model, algebraicModel, solver);
-			var subdomainUpdaters = new NonLinearModelUpdaterWithInitialConditions(algebraicModel);
 			var increments = 1;
 
-			var childAnalyzer = new DisplacementBvpNRNLAnalyzer(model, solver, subdomainUpdaters, provider, increments, uInitialFreeDOFDisplacementsPerSubdomain,
+			var childAnalyzer = new DisplacementBvpNRNLAnalyzer(model, solver,  provider, increments, uInitialFreeDOFDisplacementsPerSubdomain,
 				boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, algebraicModel);
 			childAnalyzer.SetMaxIterations = 100;
 			childAnalyzer.SetIterationsForMatrixRebuild = 1;
@@ -121,7 +120,7 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 
 			#region save state and update structures and vectors for second increment
 			var currentState = new GenericConstitutiveLawState(null, new (string, double)[0]);
-			subdomainUpdaters.UpdateState(currentState);
+			provider.UpdateState(currentState);
 			
 			// u (or uplusDu) initial 
 			uInitialFreeDOFDisplacementsPerSubdomain = childAnalyzer.GetConvergedSolutionVectorsOfFreeDofs().Copy();// ousiastika to u pou twra taftizetai me to uPlusuu
@@ -158,12 +157,11 @@ namespace MGroup.Multiscale.Tests.ExampleModels
 			//{
 			//	linearSystem.RhsVector = linearSystem.Subdomain.Forces; //TODO MS 
 			//}
-			ProblemStructural provider2 = new ProblemStructural(model, algebraicModel, solver2);
+			ProblemStructural provider2 = new ProblemStructural(model, algebraicModel);
 			//var linearSystemsArray = new[] { linearSystems[1] };
-			var subdomainUpdaters2 = new NonLinearModelUpdaterWithInitialConditions(algebraicModel);
 			var increments2 = 1;
 
-			var childAnalyzer2 = new DisplacementBvpNRNLAnalyzer(model, solver2, subdomainUpdaters2, provider2, increments2, uInitialFreeDOFDisplacementsPerSubdomain,
+			var childAnalyzer2 = new DisplacementBvpNRNLAnalyzer(model, solver2,  provider2, increments2, uInitialFreeDOFDisplacementsPerSubdomain,
 				boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, algebraicModel);
 			childAnalyzer2.SetMaxIterations = 100;
 			childAnalyzer2.SetIterationsForMatrixRebuild = 1;

@@ -20,6 +20,7 @@ using MiMsolve.intermediateCodeDevelopmentClasses;
 using MGroup.Constitutive.Structural.Providers;
 using System.Linq;
 using MGroup.MSolve.DataStructures;
+using MGroup.Constitutive.Structural;
 
 namespace MiMsolve.multiScaleSupportiveClasses
 {
@@ -32,7 +33,6 @@ namespace MiMsolve.multiScaleSupportiveClasses
     {
         protected readonly IAlgebraicModel algebraicModel;
         protected readonly IModel model;
-        private readonly NonLinearModelUpdaterWithInitialConditions subdomainUpdaters;
         private readonly int increments;
         private int maxSteps = 1000;
         private int stepsForMatrixRebuild = 0;
@@ -40,7 +40,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
         private double rhsNorm;
         private INonLinearParentAnalyzer parentAnalyzer = null;
         private readonly ISolver solver;
-        private readonly INonLinearProvider provider;
+        private readonly ProblemStructural provider;
         private readonly IGlobalVector rhs ;//comment MS2:apothikevetai se afto h timh (externalLoads/increments) gia kathe subdomain kai apo ekei pernietai opou xreiasthei (p.x. subdomain.RHS)
         private IGlobalVector u ;
         private IGlobalVector du ;
@@ -63,14 +63,13 @@ namespace MiMsolve.multiScaleSupportiveClasses
 
         #endregion
 
-        public DisplacementBvpNRNLAnalyzer(IModel model, ISolver solver, NonLinearModelUpdaterWithInitialConditions subdomainUpdaters,
-            INonLinearProvider provider, int increments, IGlobalVector uInitialFreeDOFDisplacementsPerSubdomain,
+        public DisplacementBvpNRNLAnalyzer(IModel model, ISolver solver,
+			ProblemStructural provider, int increments, IGlobalVector uInitialFreeDOFDisplacementsPerSubdomain,
             Dictionary<int, INode> boundaryNodes, Dictionary<int, Dictionary<IDofType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<IDofType, double>> totalBoundaryDisplacements,
            /*ElementEquivalentContributionsProvider equivalentContributionsAssemblers,*/ IAlgebraicModel algebraicModel)
         {
             this.model = model;
             this.solver = solver;
-            this.subdomainUpdaters = subdomainUpdaters;
             this.algebraicModel = algebraicModel;
             this.provider = provider;
             this.increments = increments;
@@ -271,7 +270,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
             }
 
             var boundaryNodesIds = boundaryNodes.Keys.ToList();
-            var internalRhs = subdomainUpdaters.GetRHSFromSolutionWithInitialDisplacemntsEffect(uPlusdu, boundaryNodes,
+            var internalRhs = provider.GetRHSFromSolutionWithInitialDisplacemntsEffect(uPlusdu, boundaryNodes,
              initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, currentIncrement+1, totalIncrements);
 
             provider.ProcessInternalRhs(uPlusdu, internalRhs);// this does nothing
@@ -314,7 +313,7 @@ namespace MiMsolve.multiScaleSupportiveClasses
         {
 			//subdomainUpdaters.UpdateState(); this comment is replaced by the following two lines
 			CreateState();
-			subdomainUpdaters.UpdateState(currentState);
+			provider.UpdateState(currentState);
 		}
 
         public IGlobalVector GetConvergedSolutionVectorsOfFreeDofs()

@@ -73,7 +73,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 			var algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			var solver = solverFactory.BuildSolver(algebraicModel);
 
-			var problem = new ProblemStructural(model, algebraicModel, solver);
+			var problem = new ProblemStructural(model, algebraicModel);
 			var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
 			var staticAnalyzer = new StaticAnalyzer(algebraicModel, problem, linearAnalyzer);
 
@@ -152,7 +152,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.CntReinforcedElasticNanocom
 			var algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			var solver = solverFactory.BuildSolver(algebraicModel);
 
-			var problem = new ProblemStructural(model, algebraicModel, solver);
+			var problem = new ProblemStructural(model, algebraicModel);
 			var loadControlAnalyzerBuilder = new LoadControlAnalyzer.Builder(algebraicModel, solver, problem, numIncrements: 2)
 			{
 				ResidualTolerance = 1E-3,

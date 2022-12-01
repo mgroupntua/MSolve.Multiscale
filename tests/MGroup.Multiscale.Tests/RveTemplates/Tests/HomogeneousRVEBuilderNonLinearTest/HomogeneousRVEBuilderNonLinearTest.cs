@@ -60,7 +60,7 @@ namespace MGroup.Multiscale.Tests.RveTemplates.Tests.HomogeneousRVEBuilderNonLin
 			var algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			var solver = solverFactory.BuildSolver(algebraicModel);
 
-			var problem = new ProblemStructural(model, algebraicModel, solver);
+			var problem = new ProblemStructural(model, algebraicModel);
 			var loadControlAnalyzerBuilder = new LoadControlAnalyzer.Builder( algebraicModel, solver, problem, numIncrements: 2)
 			{
 				ResidualTolerance = 1E-3,
