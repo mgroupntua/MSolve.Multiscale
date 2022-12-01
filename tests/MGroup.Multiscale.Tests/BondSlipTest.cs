@@ -1,11 +1,8 @@
 using System;
 
-//using ISAAR.MSolve.Materials;
 
 using MGroup.Constitutive.Structural.Cohesive;
 using MGroup.LinearAlgebra.Commons;
-//using MGroup.Materials;
-//using MGroup.Materials.Interfaces;
 using MGroup.MSolve.Constitutive;
 
 using Xunit;

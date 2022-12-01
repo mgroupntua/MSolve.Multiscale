@@ -5,11 +5,8 @@ using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.MultiscaleAnalysis;
-//using MGroup.Materials;
-//using MGroup.Materials.Interfaces;
-//using MGroup.Materials.ShellMaterials;
+
 using MGroup.MSolve.MultiscaleAnalysis.Interfaces;
-//using MGroup.Multiscale.Interfaces;
 using MGroup.Solvers.Direct;
 
 using MiMsolve.SolutionStrategies;

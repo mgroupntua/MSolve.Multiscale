@@ -1,55 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using ISAAR.MSolve.MultiscaleAnalysis;
-
-
-//using ISAAR.MSolve.Analyzers;
-//using ISAAR.MSolve.Discretization;
-//using ISAAR.MSolve.Discretization.Commons;
-//using ISAAR.MSolve.Discretization.FreedomDegrees;
-//using ISAAR.MSolve.LinearAlgebra.Matrices;
-////using ISAAR.MSolve.FEM.Materials;
-
-//using ISAAR.MSolve.LinearAlgebra.Output;
-//using ISAAR.MSolve.Materials;
-//using ISAAR.MSolve.Materials.Interfaces;
-//using ISAAR.MSolve.MSAnalysis.RveTemplatesPaper;
-//using ISAAR.MSolve.MultiscaleAnalysis;
-//using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
-////using ISAAR.MSolve.MSAnalysis.RveTemplatesPaper;
-////using ISAAR.MSolve.MultiscaleAnalysis;
-//using ISAAR.MSolve.Problems;
-//using ISAAR.MSolve.Solvers;
-//using ISAAR.MSolve.Solvers.Direct;
-//using ISAAR.MSolve.Tests.FEMpartB;
-//using JetBrains.dotMemoryUnit;
-//using MathNet.Numerics.LinearAlgebra;
-
 using MGroup.Constitutive.Structural.Continuum;
-using MGroup.Constitutive.Structural.Shells;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.MultiscaleAnalysis;
-using MGroup.Multiscale;
 using MGroup.Multiscale.RveTemplatesPaper;
-using MGroup.Multiscale.SupportiveClasses;
 
 using MiMsolve.SolutionStrategies;
 
-//using Troschuetz.Random;
 
 using Xunit;
 
-//using MatlabWriter = MathNet.Numerics.Data.Matlab.MatlabWriter;
 
-//[assembly: SuppressXUnitOutputException]
 
 namespace ISAAR.MSolve.Tests
 {
@@ -136,65 +96,7 @@ namespace ISAAR.MSolve.Tests
 			return true;
 		}
 
-		//[Fact]
-		//public void TestElasticAndMultiscaleMatricesTet()
-		//{
-		//	var material3 = new ShellElasticMaterial2Dtransformationb(youngModulus: 4.3210, poissonRation: 0.0)
-		//	{
-		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
-		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
-		//	};
-
-		//	//var trandom = new TRandom();
-		//	//var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
-		//	var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
-
-		//	var innerMaterial = new ElasticMaterial3DTotalStrain(0, 34);
-
-
-		//	var homogeneousRveBuilder1 =
-		//		new CompositeMaterialModelBuilderTet2(outterMaterial, innerMaterial, 100, 100, 100);
-
-		//	var material4 = new MicrostructureShell2D<SkylineMatrix>(homogeneousRveBuilder1, false, 1, new SkylineSolverPrefernce())
-		//	{
-		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
-		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
-		//	};
-		//	material4.UpdateConstitutiveMatrixAndEvaluateResponse(new double[] { 0, 0, 0 });
-		//}
-
-		//[Fact]
-		//public void CompositeRveWithElastic()
-		//{
-		//	var material3 = new ShellElasticMaterial2Dtransformationb(youngModulus: 4.3210, poissonRation: 0.0)
-		//	{
-		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
-		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
-		//	};
-
-		//	//var trandom = new TRandom();
-		//	//var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
-		//	var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
-
-		//	var innerMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
-
-
-		//	var homogeneousRveBuilder1 =
-		//		new GmshCompositeRveBuilder(outterMaterial, innerMaterial, 2, 2, 2, "..\\..\\..\\RveTemplates\\Input\\Continuum\\t16Solid_physical_entities_no_volume_tag_change_More_inclusions.msh");
-
-		//	var material4 = new MicrostructureShell2D<SkylineMatrix>(homogeneousRveBuilder1, true, 1, new SkylineSolverPrefernce())
-		//	{
-		//		TangentVectorV1 = new double[3] { 1, 0, 0 },
-		//		TangentVectorV2 = new double[3] { 0, 1, 0 }
-		//	};
-		//	//material4.UpdateMaterial(new double[] { 0, 0, 0 });
-
-		//	var cons = material4.ConstitutiveMatrix;
-
-		//	Assert.Equal(material3.ConstitutiveMatrix[0, 0], cons[0, 0], 7);
-		//	Assert.Equal(material3.ConstitutiveMatrix[1, 1], cons[1, 1], 7);
-		//	Assert.Equal(material3.ConstitutiveMatrix[2, 2], cons[2, 2], 7);
-		//}
+		
 
 
 	}

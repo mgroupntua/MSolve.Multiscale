@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using MGroup.LinearAlgebra.Commons;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Multiscale.Tests.SeparationBenchmarks1;
-//using MGroup.MSolve.Logging;
 using MGroup.NumericalAnalyzers.Logging;
 
 using Xunit;
